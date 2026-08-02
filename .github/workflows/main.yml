@@ -32,6 +32,12 @@ jobs:
       - name: Add Android platform
         run: npx cap add android
 
+      - name: Lock app to portrait orientation
+        run: |
+          sed -i 's/android:name=".MainActivity"/android:name=".MainActivity"\n            android:screenOrientation="portrait"/' android/app/src/main/AndroidManifest.xml
+          echo "----- Resulting MainActivity block -----"
+          grep -A 6 '.MainActivity' android/app/src/main/AndroidManifest.xml
+
       - name: Decode icon from base64
         run: base64 -d assets/icon-base64.txt > assets/icon.png
 
