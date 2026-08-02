@@ -1427,6 +1427,12 @@
                 exitBtn.addEventListener('click', function() {
                     console.log('Exit clicked');
                     audio();
+                    if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+                        try {
+                            window.Capacitor.Plugins.App.exitApp();
+                            return;
+                        } catch (e) { console.log('Native exit failed', e); }
+                    }
                     try { window.close(); } catch (e) {}
                     menuContent.style.display = 'none';
                     exitCard.style.display = 'flex';
