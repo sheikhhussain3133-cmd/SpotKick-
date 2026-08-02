@@ -1,0 +1,3536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Penalty Shootout - Stadium Edition</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #07131f;
+            font-family: 'Courier New', monospace;
+            touch-action: none;
+        }
+        #shake {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        #game {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* ----- Main Menu ----- */
+        #mainMenu {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at center, rgba(14, 26, 44, 0.82) 0%, rgba(7, 19, 31, 0.98) 100%);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 1;
+            transition: opacity 0.4s ease, visibility 0.4s;
+        }
+        #mainMenu.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        .menu-badge {
+            color: #3ddc61;
+            font-size: 12px;
+            font-weight: bold;
+            letter-spacing: 4px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(61, 220, 97, 0.5);
+        }
+        .menu-title {
+            font-size: 42px;
+            font-weight: 900;
+            color: #fff;
+            text-transform: uppercase;
+            text-shadow: 0 0 25px rgba(61, 220, 97, 0.4), 0 4px 0 #000;
+            letter-spacing: 3px;
+            margin-bottom: 24px;
+            text-align: center;
+            line-height: 1.1;
+        }
+        .menu-btn-container {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            width: 230px;
+        }
+        .menu-btn {
+            background: linear-gradient(180deg, #3ddc61 0%, #229e41 100%);
+            border: 2px solid #58ee7c;
+            color: #07131f;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 900;
+            padding: 14px 0;
+            border-radius: 12px;
+            letter-spacing: 2px;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 6px 0 #135c25, 0 10px 20px rgba(61, 220, 97, 0.25);
+            transition: all 0.15s ease;
+            text-align: center;
+        }
+        .menu-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 0 #135c25, 0 12px 24px rgba(61, 220, 97, 0.35);
+        }
+        .menu-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #135c25;
+        }
+        .menu-btn.sec-btn {
+            background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+            border-color: #60a5fa;
+            color: #fff;
+            box-shadow: 0 6px 0 #1e40af, 0 10px 20px rgba(59, 130, 246, 0.25);
+        }
+        .menu-btn.sec-btn:hover {
+            box-shadow: 0 8px 0 #1e40af, 0 12px 24px rgba(59, 130, 246, 0.35);
+        }
+        .menu-btn.exit-btn {
+            background: linear-gradient(180deg, #23344a 0%, #121c2b 100%);
+            border: 2px solid #3d526e;
+            color: #cfd8e8;
+            box-shadow: 0 6px 0 #0a101a;
+        }
+        .menu-btn.exit-btn:hover {
+            color: #fff;
+            border-color: #e8524f;
+            box-shadow: 0 8px 0 #0a101a, 0 8px 20px rgba(232, 82, 79, 0.25);
+        }
+        .menu-btn.exit-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #0a101a;
+        }
+
+        /* ----- Stadium Menu ----- */
+        #stadiumMenu {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at center, rgba(14, 26, 44, 0.95) 0%, rgba(7, 19, 31, 0.99) 100%);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 105;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.3s ease, visibility 0.3s;
+            padding: 20px;
+        }
+        #stadiumMenu.active {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+        .stadium-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            width: 100%;
+            max-width: 560px;
+            max-height: 65vh;
+            overflow-y: auto;
+            margin-bottom: 16px;
+            padding: 4px;
+        }
+        .stadium-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            border-radius: 14px;
+            padding: 10px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .stadium-card:hover {
+            transform: translateY(-3px);
+            border-color: #3ddc61;
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .stadium-card.selected {
+            border-color: #3ddc61;
+            box-shadow: 0 0 15px rgba(61, 220, 97, 0.4);
+            background: rgba(61, 220, 97, 0.1);
+        }
+        .stadium-card.selected::after {
+            content: 'SELECTED';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #3ddc61;
+            color: #07131f;
+            font-size: 9px;
+            font-weight: 900;
+            padding: 3px 6px;
+            border-radius: 6px;
+            letter-spacing: 1px;
+            z-index: 2;
+        }
+        .stadium-preview {
+            width: 100%;
+            height: 56px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .stadium-name {
+            color: #fff;
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+        .stadium-desc {
+            color: #a0aec0;
+            font-size: 9px;
+            line-height: 1.25;
+        }
+
+        /* ----- Exit Card ----- */
+        #exitCard {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            text-align: center;
+            z-index: 101;
+        }
+        #exitCard h2 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #e8524f;
+        }
+        #exitCard p {
+            opacity: 0.8;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        /* ----- HUD ----- */
+        #hud {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: env(safe-area-inset-top, 12px) 14px 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: none;
+            z-index: 5;
+        }
+        #scoreBox {
+            background: linear-gradient(#1b2a44, #0e1626);
+            border: 2px solid #cfd8e8;
+            color: #fff;
+            padding: 7px 16px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 13px;
+            letter-spacing: 1px;
+            box-shadow: 0 3px 0 rgba(0, 0, 0, 0.4);
+            pointer-events: auto;
+        }
+        #dots {
+            display: flex;
+            gap: 6px;
+            pointer-events: auto;
+        }
+        .hud-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            pointer-events: auto;
+        }
+        .dot {
+            width: 13px;
+            height: 13px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .dot.hit {
+            background: #3ddc61;
+            box-shadow: 0 0 6px #3ddc61;
+        }
+        .dot.miss {
+            background: #e04b4b;
+            box-shadow: 0 0 6px #e04b4b;
+        }
+        .dot.post {
+            background: #e8c93f;
+            box-shadow: 0 0 6px #e8c93f;
+        }
+
+        /* ----- Pause Button ----- */
+        #pauseBtn {
+            flex-shrink: 0;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(20, 30, 50, 0.75);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            color: #fff;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            transition: all 0.2s ease;
+            pointer-events: auto;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+            line-height: 1;
+            padding: 0;
+        }
+        #pauseBtn:hover {
+            transform: scale(1.08);
+            border-color: #fff;
+            background: rgba(40, 60, 90, 0.85);
+        }
+        #pauseBtn:active {
+            transform: scale(0.92);
+        }
+        #pauseBtn.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* ----- Pause Overlay ----- */
+        #pauseOverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.72);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 90;
+            flex-direction: column;
+            padding: 24px;
+        }
+        #pauseOverlay.active {
+            display: flex;
+        }
+        .pause-box {
+            background: radial-gradient(circle at center, rgba(18, 34, 56, 0.96), rgba(7, 19, 31, 0.98));
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            border-radius: 24px;
+            padding: 40px 36px 32px;
+            max-width: 340px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(61, 220, 97, 0.08);
+        }
+        .pause-box h2 {
+            color: #fff;
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            margin-bottom: 6px;
+        }
+        .pause-box .sub {
+            color: #94a3b8;
+            font-size: 13px;
+            margin-bottom: 28px;
+            letter-spacing: 1px;
+        }
+        .pause-box .pause-btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+        }
+        .pause-box .pause-btn-group .menu-btn {
+            width: 100%;
+            padding: 14px 0;
+            font-size: 15px;
+            border-radius: 12px;
+        }
+        .pause-box .pause-btn-group .menu-btn.resume-btn {
+            background: linear-gradient(180deg, #3ddc61 0%, #229e41 100%);
+            border-color: #58ee7c;
+            color: #07131f;
+            box-shadow: 0 6px 0 #135c25, 0 10px 20px rgba(61, 220, 97, 0.25);
+        }
+        .pause-box .pause-btn-group .menu-btn.resume-btn:hover {
+            box-shadow: 0 8px 0 #135c25, 0 12px 24px rgba(61, 220, 97, 0.35);
+        }
+        .pause-box .pause-btn-group .menu-btn.menu-btn-pause {
+            background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+            border-color: #60a5fa;
+            color: #fff;
+            box-shadow: 0 6px 0 #1e40af, 0 10px 20px rgba(59, 130, 246, 0.25);
+        }
+        .pause-box .pause-btn-group .menu-btn.menu-btn-pause:hover {
+            box-shadow: 0 8px 0 #1e40af, 0 12px 24px rgba(59, 130, 246, 0.35);
+        }
+
+        /* ----- Message & banners ----- */
+        #message {
+            position: fixed;
+            top: 36%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.7);
+            font-size: 46px;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 3px 3px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+            letter-spacing: 2px;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 6;
+            transition: opacity 0.18s ease-out, transform 0.28s cubic-bezier(.2, 1.4, .4, 1);
+        }
+        #message.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.05);
+        }
+        #message.goal {
+            color: #3ddc61;
+        }
+        #message.bad {
+            color: #e8524f;
+        }
+        #message.post {
+            color: #e8c93f;
+        }
+
+        #transBanner {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            background: linear-gradient(135deg, rgba(14, 26, 43, 0.95), rgba(7, 13, 22, 0.98));
+            border: 3px solid #3ddc61;
+            color: #fff;
+            padding: 22px 42px;
+            border-radius: 20px;
+            font-size: 26px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-align: center;
+            box-shadow: 0 0 35px rgba(61, 220, 97, 0.4), inset 0 0 15px rgba(61, 220, 97, 0.2);
+            z-index: 50;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease-out, transform 0.3s cubic-bezier(.2, 1.4, .4, 1);
+            text-transform: lowercase;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+        }
+        #transBanner.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        #overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: #fff;
+            text-align: center;
+            z-index: 20;
+        }
+        #overlay h1 {
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+        #overlay p {
+            font-size: 17px;
+            margin-bottom: 22px;
+            opacity: 0.9;
+        }
+        #overlay button {
+            background: #3ddc61;
+            border: none;
+            color: #083012;
+            font-weight: bold;
+            padding: 14px 34px;
+            font-size: 17px;
+            border-radius: 30px;
+            font-family: inherit;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 0 #1c7a35;
+            cursor: pointer;
+        }
+        #overlay button:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #1c7a35;
+        }
+
+        #diffBadge {
+            position: fixed;
+            top: calc(env(safe-area-inset-top, 12px) + 46px);
+            left: 14px;
+            color: #ffd35c;
+            font-size: 11px;
+            letter-spacing: 1px;
+            opacity: 0.85;
+            z-index: 5;
+        }
+
+        #joyWrap {
+            position: fixed;
+            bottom: 6%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 150px;
+            z-index: 5;
+        }
+        #powerRing {
+            position: absolute;
+            inset: 0;
+            transform: rotate(-90deg);
+        }
+        #joyBase {
+            position: absolute;
+            left: 5px;
+            top: 5px;
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06));
+            border: 3px solid rgba(255, 255, 255, 0.55);
+            touch-action: none;
+        }
+        #joyNub {
+            position: absolute;
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 30%, #fff, #d8d8d8);
+            border: 3px solid #fff;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
+            top: 41px;
+            left: 41px;
+            transition: top 0.09s, left 0.09s;
+        }
+        #hint {
+            position: fixed;
+            bottom: calc(6% + 175px);
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fff;
+            font-size: 13px;
+            text-align: center;
+            width: 80%;
+            opacity: 0.8;
+            z-index: 5;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+        }
+        #keeperStatus {
+            position: fixed;
+            top: calc(env(safe-area-inset-top, 12px) + 80px);
+            right: 14px;
+            color: #00e5ff;
+            font-size: 10px;
+            text-align: right;
+            opacity: 0.85;
+            z-index: 5;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(0, 229, 255, 0.2);
+            pointer-events: none;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* Jersey flash */
+        #jerseyFlash {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 7;
+            opacity: 0;
+            transition: opacity 0.15s ease;
+        }
+        #jerseyFlash.active {
+            opacity: 1;
+        }
+        #jerseyFlash .flash-inner {
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, rgba(232, 54, 54, 0.45) 0%, rgba(232, 54, 54, 0) 70%);
+            animation: flashPulse 1.2s ease forwards;
+        }
+        @keyframes flashPulse {
+            0% {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            20% {
+                opacity: 1;
+                transform: scale(1.05);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(1.2);
+            }
+        }
+
+        #kitBadge {
+            position: fixed;
+            top: calc(env(safe-area-inset-top, 12px) + 80px);
+            left: 14px;
+            color: #ffd35c;
+            font-size: 10px;
+            letter-spacing: 1px;
+            opacity: 0;
+            z-index: 5;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 3px 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 211, 92, 0.2);
+            transition: opacity 0.6s ease;
+            pointer-events: none;
+            font-family: 'Courier New', monospace;
+        }
+        #kitBadge.show {
+            opacity: 0.85;
+        }
+
+        /* Responsive tweaks */
+        @media (max-width: 480px) {
+            .menu-title {
+                font-size: 30px;
+            }
+            .pause-box {
+                padding: 28px 20px 24px;
+            }
+            .pause-box h2 {
+                font-size: 22px;
+            }
+            #pauseBtn {
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="shake">
+        <canvas id="game"></canvas>
+
+        <!-- Jersey Flash -->
+        <div id="jerseyFlash"><div class="flash-inner"></div></div>
+
+        <!-- Main Menu -->
+        <div id="mainMenu">
+            <div id="menuContent">
+                <div class="menu-badge">3D Football Challenge</div>
+                <h1 class="menu-title">Penalty<br>Shootout</h1>
+                <div class="menu-btn-container">
+                    <button class="menu-btn" id="startBtn">Start Game</button>
+                    <button class="menu-btn sec-btn" id="stadiumSelectBtn">Select Stadium</button>
+                    <button class="menu-btn exit-btn" id="exitBtn">Exit</button>
+                </div>
+            </div>
+            <div id="exitCard">
+                <h2>Game Closed</h2>
+                <p>Thanks for playing Penalty Shootout!</p>
+                <button class="menu-btn" id="reopenBtn">Return to Menu</button>
+            </div>
+        </div>
+
+        <!-- Stadium Selection -->
+        <div id="stadiumMenu">
+            <div class="menu-badge">Customize Match</div>
+            <h2 class="menu-title" style="font-size:26px; margin-bottom:14px;">Select Stadium</h2>
+            <div class="stadium-grid" id="stadiumGrid"></div>
+            <button class="menu-btn exit-btn" id="stadiumBackBtn" style="width:200px;">Back to Menu</button>
+        </div>
+
+        <!-- Pause Overlay -->
+        <div id="pauseOverlay">
+            <div class="pause-box">
+                <h2>⏸ Paused</h2>
+                <p class="sub">Take a breather</p>
+                <div class="pause-btn-group">
+                    <button class="menu-btn resume-btn" id="resumeBtn">▶ Resume</button>
+                    <button class="menu-btn menu-btn-pause" id="goToMenuBtn">🏠 Go to Menu</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- HUD -->
+        <div id="hud">
+            <div id="scoreBox">YOU 0 – 0 OPP</div>
+            <div class="hud-right">
+                <div id="dots"></div>
+                <button id="pauseBtn" class="hidden">⏸</button>
+            </div>
+        </div>
+
+        <div id="diffBadge">ROUND 1 · ROLE: SHOOTER</div>
+        <div id="keeperStatus">GK: READY</div>
+        <div id="kitBadge">⚽ KIT: HOME</div>
+
+        <div id="hint">Pull back to aim & curve · pull further up for power & height</div>
+        <div id="joyWrap">
+            <svg id="powerRing" viewBox="0 0 150 150">
+                <circle cx="75" cy="75" r="70" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="5"/>
+                <circle id="powerArc" cx="75" cy="75" r="70" fill="none" stroke="#3ddc61" stroke-width="5"
+                stroke-dasharray="440" stroke-dashoffset="440" stroke-linecap="round"/>
+            </svg>
+            <div id="joyBase"><div id="joyNub"></div></div>
+        </div>
+        <div id="message"></div>
+        <div id="transBanner">now opponent round</div>
+
+        <div id="overlay">
+            <h1 id="overTitle">Game Over</h1>
+            <p id="overSub"></p>
+            <button id="restartBtn">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            console.log('Penalty Shootout script loaded.');
+
+            try {
+                const canvas = document.getElementById('game');
+                const ctx = canvas.getContext('2d');
+                const shakeEl = document.getElementById('shake');
+                const jerseyFlash = document.getElementById('jerseyFlash');
+                const kitBadge = document.getElementById('kitBadge');
+                let W, H, DPR;
+                let rainDrops = [];
+                let lightningAlpha = 0;
+                let lightningTimer = 3 + Math.random() * 4;
+
+                function resize() {
+                    DPR = Math.min(window.devicePixelRatio || 1, 2);
+                    W = window.innerWidth;
+                    H = window.innerHeight;
+                    canvas.width = W * DPR;
+                    canvas.height = H * DPR;
+                    canvas.style.width = W + 'px';
+                    canvas.style.height = H + 'px';
+                    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+                    initRainDrops();
+                }
+                window.addEventListener('resize', resize);
+                resize();
+
+                // ================= Audio =================
+                let actx;
+
+                function audio() {
+                    if (!actx) {
+                        try { actx = new(window.AudioContext || window.webkitAudioContext)(); } catch (e) { console.warn(
+                                'AudioContext not available'); }
+                    }
+                    return actx;
+                }
+
+                function tone(freq, dur, type, vol, delay) {
+                    const ac = audio();
+                    if (!ac) return;
+                    try {
+                        const t0 = ac.currentTime + (delay || 0);
+                        const o = ac.createOscillator();
+                        const g = ac.createGain();
+                        o.type = type || 'sine';
+                        o.frequency.setValueAtTime(freq, t0);
+                        g.gain.setValueAtTime(0, t0);
+                        g.gain.linearRampToValueAtTime(vol || 0.2, t0 + 0.01);
+                        g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+                        o.connect(g);
+                        g.connect(ac.destination);
+                        o.start(t0);
+                        o.stop(t0 + dur + 0.02);
+                    } catch (e) {}
+                }
+
+                function noiseBurst(dur, vol, filterFreq) {
+                    const ac = audio();
+                    if (!ac) return;
+                    try {
+                        const bufSize = ac.sampleRate * dur;
+                        const buf = ac.createBuffer(1, bufSize, ac.sampleRate);
+                        const data = buf.getChannelData(0);
+                        for (let i = 0; i < bufSize; i++) { data[i] = (Math.random() * 2 - 1) * (1 - i / bufSize); }
+                        const src = ac.createBufferSource();
+                        src.buffer = buf;
+                        const filt = ac.createBiquadFilter();
+                        filt.type = 'lowpass';
+                        filt.frequency.value = filterFreq || 2000;
+                        const g = ac.createGain();
+                        g.gain.value = vol || 0.3;
+                        src.connect(filt);
+                        filt.connect(g);
+                        g.connect(ac.destination);
+                        src.start();
+                    } catch (e) {}
+                }
+
+                function sfxKick() { tone(140, 0.12, 'triangle', 0.35);
+                    noiseBurst(0.08, 0.2, 1500); }
+
+                function sfxWhistle() { tone(1600, 0.35, 'sine', 0.18); }
+
+                function sfxPost() { tone(900, 0.25, 'square', 0.22);
+                    tone(500, 0.3, 'square', 0.15, 0.05); }
+
+                function sfxCrowdGood() { noiseBurst(1.1, 0.35, 3000);
+                    tone(220, 0.6, 'sawtooth', 0.06, 0.05); }
+
+                function sfxCrowdBad() { noiseBurst(0.6, 0.22, 1000); }
+
+                function sfxGloveSave() { tone(180, 0.15, 'sine', 0.4);
+                    noiseBurst(0.12, 0.35, 800); }
+
+                function vibrate(p) { if (navigator.vibrate) navigator.vibrate(p); }
+
+                // ================= Player Team Colors =================
+                const PLAYER_COLORS = {
+                    primary: '#e83636',
+                    secondary: '#ab1d1d',
+                    shorts: '#182236',
+                    gloves: '#e83636',
+                    boots: '#cc1a1a'
+                };
+                const OPPONENT_COLORS = {
+                    primary: '#1e60d5',
+                    secondary: '#0f3b8c',
+                    shorts: '#ffffff',
+                    gloves: '#1e60d5',
+                    boots: '#111111'
+                };
+
+                // ================= STADIUMS =================
+                const STADIUMS = [
+                    { id: 'classic', name: 'Grand Arena', desc: 'Classic pro stadium', skyGrad: ['#a9d8ec', '#dff0f4'],
+                        floodlightGlow: 'rgba(255,255,255,0.35)', standBg: ['#3d4c6b', '#28324a'],
+                        standSeats: ['#2255cc', '#d94f4f', '#e8c93f', '#ffffff', '#1c1c1c'],
+                        adColors: ['#e8c93f', '#2b3a5c', '#d94f4f', '#3ddc61'], grassType: 'stripes',
+                        grassColors: ['#3f9e39', '#5cc94d'], grassStripeAlpha: [0.07, 0.05], postStyle: 'white',
+                        postRadius: 5.5, netColor: 'rgba(245,248,250,0.42)',
+                        keeperKit: { primary: '#facc15', secondary: '#ca8a04', shorts: '#1e293b', gloves: '#facc15' } },
+                    { id: 'cyber', name: 'Cyber Neon Dome', desc: 'Futuristic night pitch', skyGrad: ['#0b021a',
+                            '#1e0836'
+                        ], floodlightGlow: 'rgba(0,229,255,0.45)', standBg: ['#12032e', '#070014'],
+                        standSeats: ['#00f0ff', '#ff0055', '#7000ff', '#39ff14', '#ffffff'],
+                        adColors: ['#00f0ff', '#ff0055', '#7000ff', '#39ff14'], grassType: 'cyber_grid',
+                        grassColors: ['#07182e', '#0a2342'], grassStripeAlpha: [0.12, 0.08], postStyle: 'neon',
+                        postRadius: 6.0, netColor: 'rgba(0,240,255,0.55)',
+                        keeperKit: { primary: '#00f0ff', secondary: '#005577', shorts: '#0a0a1a', gloves: '#00f0ff' } },
+                    { id: 'sunset', name: 'Sunset Colosseum', desc: 'Warm evening pitch', skyGrad: ['#f97316',
+                            '#fdba74'
+                        ], floodlightGlow: 'rgba(251,146,60,0.35)', standBg: ['#6b21a8', '#3b0764'],
+                        standSeats: ['#ea580c', '#b45309', '#78350f', '#fde047', '#f43f5e'],
+                        adColors: ['#fde047', '#ea580c', '#b45309', '#f43f5e'], grassType: 'dry_stripes',
+                        grassColors: ['#7c8328', '#9ca332'], grassStripeAlpha: [0.08, 0.06], postStyle: 'gold',
+                        postRadius: 5.2, netColor: 'rgba(254,243,199,0.5)',
+                        keeperKit: { primary: '#f43f5e', secondary: '#9f1239', shorts: '#1c1917', gloves: '#f43f5e' } },
+                    { id: 'midnight', name: 'Midnight Park', desc: 'Deep blue night pitch', skyGrad: ['#0284c7',
+                            '#38bdf8'
+                        ], floodlightGlow: 'rgba(224,242,254,0.4)', standBg: ['#0f172a', '#020617'],
+                        standSeats: ['#38bdf8', '#818cf8', '#c084fc', '#f43f5e', '#e2e8f0'],
+                        adColors: ['#38bdf8', '#818cf8', '#e2e8f0', '#f43f5e'], grassType: 'checkered',
+                        grassColors: ['#15803d', '#16a34a'], grassStripeAlpha: [0.08, 0.08], postStyle: 'black_gold',
+                        postRadius: 5.5, netColor: 'rgba(226,232,240,0.45)',
+                        keeperKit: { primary: '#818cf8', secondary: '#312e81', shorts: '#0f172a', gloves: '#818cf8' } },
+                    { id: 'volcanic', name: 'Volcanic Inferno', desc: 'Fiery volcanic pitch', skyGrad: ['#7f1d1d',
+                            '#b91c1c'
+                        ], floodlightGlow: 'rgba(249,115,22,0.45)', standBg: ['#450a0a', '#180202'],
+                        standSeats: ['#ef4444', '#f97316', '#eab308', '#7f1d1d', '#1c1917'],
+                        adColors: ['#ef4444', '#f97316', '#eab308', '#ffffff'], grassType: 'stripes',
+                        grassColors: ['#292524', '#1c1917'], grassStripeAlpha: [0.12, 0.08], postStyle: 'gold',
+                        postRadius: 5.5, netColor: 'rgba(248,113,113,0.5)',
+                        keeperKit: { primary: '#ef4444', secondary: '#7f1d1d', shorts: '#1c1917', gloves: '#ef4444' } },
+                    { id: 'arctic', name: 'Arctic Glacier Arena', desc: 'Frozen icy stadium', skyGrad: ['#0ea5e9',
+                            '#e0f2fe'
+                        ], floodlightGlow: 'rgba(56,189,248,0.45)', standBg: ['#0369a1', '#0c4a6e'],
+                        standSeats: ['#38bdf8', '#bae6fd', '#7dd3fc', '#ffffff', '#0284c7'],
+                        adColors: ['#38bdf8', '#bae6fd', '#ffffff', '#7dd3fc'], grassType: 'checkered',
+                        grassColors: ['#e0f2fe', '#bae6fd'], grassStripeAlpha: [0.15, 0.1], postStyle: 'neon',
+                        postRadius: 5.5, netColor: 'rgba(255,255,255,0.6)',
+                        keeperKit: { primary: '#38bdf8', secondary: '#0369a1', shorts: '#0c4a6e', gloves: '#38bdf8' } },
+                    { id: 'coliseum', name: 'Golden Coliseum', desc: 'Sunlit ancient stone arena', skyGrad: ['#fcd34d',
+                            '#fef3c7'
+                        ], floodlightGlow: 'rgba(255,236,179,0.45)', standBg: ['#78350f', '#451a03'],
+                        standSeats: ['#b45309', '#fbbf24', '#7c2d12', '#fef3c7', '#78350f'],
+                        adColors: ['#fbbf24', '#78350f', '#fef3c7', '#b45309'], grassType: 'stripes',
+                        grassColors: ['#4d7c0f', '#65a30d'], grassStripeAlpha: [0.09, 0.06], postStyle: 'gold',
+                        postRadius: 5.5, netColor: 'rgba(255,247,224,0.5)',
+                        keeperKit: { primary: '#fbbf24', secondary: '#78350f', shorts: '#1c1917', gloves: '#fbbf24' } },
+                    { id: 'forest', name: 'Emerald Forest Arena', desc: 'Lush pitch ringed by woodland', skyGrad: [
+                            '#38bdf8', '#bbf7d0'
+                        ], floodlightGlow: 'rgba(187,247,208,0.4)', standBg: ['#14532d', '#052e16'],
+                        standSeats: ['#22c55e', '#166534', '#facc15', '#ffffff', '#065f46'],
+                        adColors: ['#22c55e', '#facc15', '#065f46', '#ffffff'], grassType: 'stripes',
+                        grassColors: ['#166534', '#22c55e'], grassStripeAlpha: [0.1, 0.07], postStyle: 'white',
+                        postRadius: 5.5, netColor: 'rgba(240,253,244,0.45)',
+                        keeperKit: { primary: '#22c55e', secondary: '#14532d', shorts: '#052e16', gloves: '#22c55e' } },
+                    { id: 'rainstorm', name: 'Storm Harbor Arena', desc: 'Rain-soaked night thunderstorm', weather: 'rain',
+                        skyGrad: ['#1e293b', '#334155'], floodlightGlow: 'rgba(226,232,240,0.55)',
+                        standBg: ['#0f172a', '#020617'],
+                        standSeats: ['#64748b', '#334155', '#94a3b8', '#1e293b', '#cbd5e1'],
+                        adColors: ['#38bdf8', '#f8fafc', '#64748b', '#0ea5e9'], grassType: 'wet_stripes',
+                        grassColors: ['#0f3d1f', '#155e2f'], grassStripeAlpha: [0.11, 0.08], postStyle: 'white',
+                        postRadius: 5.5, netColor: 'rgba(226,232,240,0.5)',
+                        keeperKit: { primary: '#cbd5e1', secondary: '#334155', shorts: '#0f172a', gloves: '#cbd5e1' } }
+                ];
+                let currentStadiumIdx = 0;
+                let jerseySwapped = false;
+
+                // ================= Game state =================
+                const TOTAL_ROUNDS = 5;
+                let round = 0;
+                let playerGoals = 0,
+                    opponentGoals = 0;
+                let resultsPlayer = [];
+                let resultsOpponent = [];
+                let state = 'menu';
+                let t = 0;
+                let shotHistory = [];
+
+                let aim = { x: 0, y: 0 };
+                let power = 0;
+
+                let shot = null;
+                let keeper = {
+                    dive: 0,
+                    diveDir: 0,
+                    animT: -1,
+                    targetHeight: 0,
+                    tookOff: false,
+                    landed: false,
+                    vx: 0,
+                    vy: 0,
+                    ax: 0,
+                    ay: 0,
+                    diveStartX: 0,
+                    diveStartY: 0,
+                    divePhase: 0,
+                    reactionDelay: 0,
+                    reactionTimer: 0,
+                    hasReacted: false,
+                    diveSpeed: 1.0,
+                    recoveryTime: 0,
+                    isRecovering: false,
+                    patternMemory: [],
+                    confidence: 0,
+                    predictedZone: 0,
+                    predictedHeight: 0.5,
+                    bodyAngle: 0,
+                    armAngleL: 0,
+                    armAngleR: 0,
+                    legSpread: 0,
+                    torsoLean: 0
+                };
+                let taker = { runProgress: 0, kickProgress: 0, runT: 0 };
+                let shotLaunched = false;
+                let outcome = null;
+                let particles = [];
+                let shakeState = { mag: 0 };
+                let slowFactor = 1;
+                let deflectionVec = null;
+
+                // 3D ball geometry
+                const phi = (1 + Math.sqrt(5)) / 2;
+                const icoVertices = [
+                    [-1, phi, 0],
+                    [1, phi, 0],
+                    [-1, -phi, 0],
+                    [1, -phi, 0],
+                    [0, -1, phi],
+                    [0, 1, phi],
+                    [0, -1, -phi],
+                    [0, 1, -phi],
+                    [phi, 0, -1],
+                    [phi, 0, 1],
+                    [-phi, 0, -1],
+                    [-phi, 0, 1]
+                ].map(v => { const len = Math.hypot(v[0], v[1], v[2]); return [v[0] / len, v[1] / len, v[2] / len]; });
+                let ballMat = [
+                    [1, 0, 0],
+                    [0, 1, 0],
+                    [0, 0, 1]
+                ];
+                let ballSpinVec = { wx: 0, wy: 0, wz: 0 };
+
+                function updateBallRotation(dt) {
+                    const wLen = Math.hypot(ballSpinVec.wx, ballSpinVec.wy, ballSpinVec.wz);
+                    if (wLen < 0.001) return;
+                    const angle = wLen * dt;
+                    const ux = ballSpinVec.wx / wLen,
+                        uy = ballSpinVec.wy / wLen,
+                        uz = ballSpinVec.wz / wLen;
+                    const c = Math.cos(angle),
+                        s = Math.sin(angle),
+                        omc = 1 - c;
+                    const R = [
+                        [c + ux * ux * omc, ux * uy * omc - uz * s, ux * uz * omc + uy * s],
+                        [uy * ux * omc + uz * s, c + uy * uy * omc, uy * uz * omc - ux * s],
+                        [uz * ux * omc - uy * s, uz * uy * omc + ux * s, c + uz * uz * omc]
+                    ];
+                    const res = [
+                        [0, 0, 0],
+                        [0, 0, 0],
+                        [0, 0, 0]
+                    ];
+                    for (let i = 0; i < 3; i++) {
+                        for (let j = 0; j < 3; j++) {
+                            res[i][j] = R[i][0] * ballMat[0][j] + R[i][1] * ballMat[1][j] + R[i][2] * ballMat[2][j];
+                        }
+                    }
+                    ballMat = res;
+                }
+
+                // DOM refs
+                const dotsEl = document.getElementById('dots');
+                const scoreBox = document.getElementById('scoreBox');
+                const messageEl = document.getElementById('message');
+                const transBanner = document.getElementById('transBanner');
+                const overlay = document.getElementById('overlay');
+                const overTitle = document.getElementById('overTitle');
+                const overSub = document.getElementById('overSub');
+                const hintEl = document.getElementById('hint');
+                const diffBadge = document.getElementById('diffBadge');
+                const powerArc = document.getElementById('powerArc');
+                const keeperStatus = document.getElementById('keeperStatus');
+
+                const mainMenu = document.getElementById('mainMenu');
+                const startBtn = document.getElementById('startBtn');
+                const exitBtn = document.getElementById('exitBtn');
+                const menuContent = document.getElementById('menuContent');
+                const exitCard = document.getElementById('exitCard');
+                const reopenBtn = document.getElementById('reopenBtn');
+                const stadiumMenu = document.getElementById('stadiumMenu');
+                const stadiumSelectBtn = document.getElementById('stadiumSelectBtn');
+                const stadiumBackBtn = document.getElementById('stadiumBackBtn');
+                const stadiumGrid = document.getElementById('stadiumGrid');
+
+                // Pause elements
+                const pauseBtn = document.getElementById('pauseBtn');
+                const pauseOverlay = document.getElementById('pauseOverlay');
+                const resumeBtn = document.getElementById('resumeBtn');
+                const goToMenuBtn = document.getElementById('goToMenuBtn');
+                let paused = false;
+
+                function isKeeperMode() { return round >= TOTAL_ROUNDS; }
+
+                function initDots() {
+                    dotsEl.innerHTML = '';
+                    for (let i = 0; i < TOTAL_ROUNDS; i++) { const d = document.createElement('div');
+                        d.className = 'dot';
+                        dotsEl.appendChild(d); }
+                }
+                initDots();
+
+                function updateHud() {
+                    scoreBox.textContent = `YOU ${playerGoals} – ${opponentGoals} OPP`;
+                    const dots = dotsEl.children;
+                    const currentResults = isKeeperMode() ? resultsOpponent : resultsPlayer;
+                    for (let i = 0; i < TOTAL_ROUNDS; i++) {
+                        let cls = 'dot';
+                        if (currentResults[i] === 'hit') cls += ' hit';
+                        else if (currentResults[i] === 'post') cls += ' post';
+                        else if (currentResults[i]) cls += ' miss';
+                        dots[i].className = cls;
+                    }
+                    const currentRoundNum = (round % TOTAL_ROUNDS) + 1;
+                    if (!isKeeperMode()) {
+                        diffBadge.textContent = 'ROUND ' + currentRoundNum + ' / ' + TOTAL_ROUNDS + ' · ROLE: SHOOTER';
+                        hintEl.textContent = 'Pull back to aim & curve · pull further up for power & height';
+                        kitBadge.textContent = '⚽ KIT: HOME (RED)';
+                        kitBadge.className = 'show';
+                    } else {
+                        diffBadge.textContent = 'ROUND ' + currentRoundNum + ' / ' + TOTAL_ROUNDS + ' · ROLE: GOALKEEPER';
+                        hintEl.textContent = 'Move joystick LEFT/RIGHT & UP/DOWN to set dive direction!';
+                        kitBadge.textContent = '⚽ KIT: AWAY (RED) · YOU ARE GK!';
+                        kitBadge.className = 'show';
+                    }
+                    updateKeeperStatus();
+                    updatePauseBtnVisibility();
+                }
+
+                function updateKeeperStatus() {
+                    if (paused) { keeperStatus.textContent = '⏸ PAUSED'; return; }
+                    if (state === 'aim') {
+                        if (isKeeperMode()) keeperStatus.textContent = 'GK: ANTICIPATING...';
+                        else keeperStatus.textContent = 'GK: READY';
+                    } else if (state === 'flight') {
+                        keeperStatus.textContent = 'GK: DIVING!';
+                    } else if (state === 'result') {
+                        keeperStatus.textContent = 'GK: ' + (outcome === 'saved' ? 'SAVED!' : outcome === 'hit' ?
+                            'BEATEN' : 'RELIEF');
+                    } else {
+                        keeperStatus.textContent = 'GK: READY';
+                    }
+                }
+
+                function updatePauseBtnVisibility() {
+                    const visible = state !== 'menu' && state !== 'over' && state !== 'transition';
+                    pauseBtn.classList.toggle('hidden', !visible);
+                }
+
+                function showMessage(text, cls) {
+                    messageEl.textContent = text;
+                    messageEl.className = 'show ' + (cls || '');
+                    setTimeout(() => messageEl.classList.remove('show'), 950);
+                }
+
+                function showOpponentRoundTransition(callback) {
+                    state = 'transition';
+                    transBanner.textContent = '⚽ OPPONENT ROUND ⚽';
+                    transBanner.classList.add('show');
+                    sfxWhistle();
+                    updatePauseBtnVisibility();
+                    setTimeout(() => {
+                        transBanner.classList.remove('show');
+                        setTimeout(callback, 300);
+                    }, 2000);
+                }
+
+                function triggerJerseySwap() {
+                    jerseyFlash.classList.remove('active');
+                    void jerseyFlash.offsetWidth;
+                    jerseyFlash.classList.add('active');
+                    setTimeout(() => jerseyFlash.classList.remove('active'), 1300);
+                    jerseySwapped = true;
+                    sfxWhistle();
+                    vibrate([40, 30, 50]);
+                }
+
+                function shakeScreen(mag) { shakeState.mag = mag; }
+
+                // ================= UI =================
+                const PREVIEW_POST_COLORS = { white: '#f5f8fa', gold: '#fbbf24', neon: '#00f0ff', black_gold: '#fbbf24' };
+
+                function buildTierCrowd(st, yStart, rowH, rows, cols, seatW, seatH, headR) {
+                    const skin = ['#e8c39e', '#c98a5b', '#8a5a3b', '#f0d0b0'];
+                    const shirt = st.standSeats;
+                    const colW = 200 / cols;
+                    let out = '';
+                    for (let r = 0; r < rows; r++) {
+                        for (let c = 0; c < cols; c++) {
+                            const x = (c + 0.5) * colW + (r % 2 === 0 ? colW / 2 : 0);
+                            const y = yStart + r * rowH;
+                            const seed = (c * 7 + r * 13 + rows * 5) % 17;
+                            const sc = shirt[seed % shirt.length];
+                            const kc = skin[seed % skin.length];
+                            out += `<rect x="${(x - seatW / 2).toFixed(1)}" y="${y.toFixed(1)}" width="${seatW}" height="${seatH}" rx="0.35" fill="${sc}"/>` +
+                                `<circle cx="${x.toFixed(1)}" cy="${(y - headR - 0.3).toFixed(1)}" r="${headR}" fill="${kc}"/>`;
+                        }
+                    }
+                    return out;
+                }
+
+                function buildMowMarkup(st) {
+                    const bands = 7, w = 200 / bands, y0 = 30.2, h = 29.8;
+                    let out = '';
+                    for (let i = 0; i < bands; i++) {
+                        out += `<rect x="${(i * w).toFixed(1)}" y="${y0}" width="${(w + 0.4).toFixed(1)}" height="${h}" fill="${st.grassColors[i % 2]}" fill-opacity="${i % 2 === 0 ? st.grassStripeAlpha[0] + 0.85 : st.grassStripeAlpha[1] + 0.85}"/>`;
+                    }
+                    return out;
+                }
+
+                function buildStadiumPreviewSVG(st) {
+                    const postColor = PREVIEW_POST_COLORS[st.postStyle] || '#f5f8fa';
+                    return `
+                  <svg viewBox="0 0 200 60" style="width:100%; height:100%; position:absolute; inset:0; display:block;">
+                    <defs>
+                      <linearGradient id="sky_${st.id}" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="${st.skyGrad[0]}"/>
+                        <stop offset="100%" stop-color="${st.skyGrad[1]}"/>
+                      </linearGradient>
+                      <linearGradient id="standBandU_${st.id}" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="${st.standBg[1]}"/>
+                        <stop offset="100%" stop-color="${st.standBg[0]}"/>
+                      </linearGradient>
+                      <linearGradient id="standBandL_${st.id}" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="${st.standBg[0]}"/>
+                        <stop offset="100%" stop-color="${st.standBg[1]}"/>
+                      </linearGradient>
+                      <radialGradient id="glow_${st.id}" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="${st.floodlightGlow}"/>
+                        <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+                      </radialGradient>
+                      <linearGradient id="beam_${st.id}" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="${st.floodlightGlow}"/>
+                        <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+                      </linearGradient>
+                      <pattern id="net_${st.id}" width="2.6" height="2.6" patternUnits="userSpaceOnUse">
+                        <path d="M0,0 L2.6,2.6 M2.6,0 L0,2.6" stroke="${st.netColor}" stroke-width="0.45"/>
+                      </pattern>
+                      <radialGradient id="vign_${st.id}" cx="50%" cy="32%" r="80%">
+                        <stop offset="55%" stop-color="rgba(0,0,0,0)"/>
+                        <stop offset="100%" stop-color="rgba(0,0,0,0.34)"/>
+                      </radialGradient>
+                    </defs>
+
+                    <rect width="200" height="10" fill="url(#sky_${st.id})"/>
+
+                    <!-- side-stand perspective wings (bowl wrap-around) -->
+                    <path d="M 0 9 L 17 9 L 21 26.5 L 0 26.5 Z" fill="${st.standBg[0]}"/>
+                    <path d="M 200 9 L 183 9 L 179 26.5 L 200 26.5 Z" fill="${st.standBg[0]}"/>
+                    <path d="M 0 9 L 17 9 L 21 26.5 L 0 26.5 Z" fill="rgba(0,0,0,0.35)"/>
+                    <path d="M 200 9 L 183 9 L 179 26.5 L 200 26.5 Z" fill="rgba(0,0,0,0.35)"/>
+
+                    <!-- floodlight lattice towers -->
+                    ${[10, 190].map(px => `
+                    <circle cx="${px}" cy="3" r="14" fill="url(#glow_${st.id})"/>
+                    <polygon points="${px - 5},27 ${px - 1.4},3 ${px + 1.4},3 ${px + 5},27" fill="rgba(0,0,0,0)"/>
+                    <path d="M ${px - 2.4} 27 L ${px - 0.9} 3 M ${px + 2.4} 27 L ${px + 0.9} 3
+                             M ${px - 2.1} 20 L ${px + 2.1} 20 M ${px - 1.7} 13 L ${px + 1.7} 13 M ${px - 1.3} 7 L ${px + 1.3} 7
+                             M ${px - 2.2} 24 L ${px + 0.9} 16 M ${px + 2.2} 24 L ${px - 0.9} 16
+                             M ${px - 1.9} 17 L ${px + 1.5} 9.5 M ${px + 1.9} 17 L ${px - 1.5} 9.5"
+                          stroke="#3a3f4a" stroke-width="0.5" fill="none"/>
+                    <rect x="${px - 5.5}" y="0.6" width="11" height="2.6" rx="0.6" fill="#e8edf2"/>
+                    ${[-3.6, -1.2, 1.2, 3.6].map(o => `<circle cx="${px + o}" cy="1.9" r="0.55" fill="#fff9e0"/>`).join('')}
+                    <polygon points="${px - 5},27 ${px - 1.4},3 ${px + 1.4},3 ${px + 5},27" fill="url(#beam_${st.id})" opacity="0.35"/>
+                    `).join('')}
+
+                    <!-- roof canopy (curved) -->
+                    <path d="M 17 9 Q 100 2 183 9 L 183 11.5 Q 100 6 17 11.5 Z" fill="${st.standBg[1]}"/>
+                    <path d="M 17 9 Q 100 2 183 9" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="0.6"/>
+
+                    <!-- upper tier -->
+                    <path d="M 17 11.5 Q 100 6.5 183 11.5 L 183 18 L 17 18 Z" fill="url(#standBandU_${st.id})"/>
+                    <g opacity="0.92">${buildTierCrowd(st, 12.6, 2.5, 2, 30, 2.5, 2, 0.85)}</g>
+                    <path d="M 17 11.5 Q 100 6.5 183 11.5 L 183 18 L 17 18 Z" fill="rgba(0,0,0,0.22)"/>
+
+                    <!-- big screen -->
+                    <rect x="140" y="12.4" width="16" height="6.2" rx="0.5" fill="#0a0f16" stroke="#4a5568" stroke-width="0.4"/>
+                    <rect x="141" y="13.4" width="14" height="4.2" fill="#0e2a44"/>
+                    <rect x="141.5" y="13.9" width="4" height="1.4" fill="#3ddc61"/>
+                    <rect x="146" y="13.9" width="3" height="1.4" fill="#e8c93f"/>
+                    <rect x="141.5" y="15.7" width="6.5" height="1.2" fill="#e8524f"/>
+
+                    <!-- concourse gap -->
+                    <rect x="0" y="18" width="200" height="1.3" fill="#0c1119"/>
+                    <rect x="0" y="18" width="200" height="1.3" fill="${st.floodlightGlow}" opacity="0.12"/>
+
+                    <!-- lower tier -->
+                    <rect x="0" y="19.3" width="200" height="8.3" fill="url(#standBandL_${st.id})"/>
+                    ${buildTierCrowd(st, 20.6, 3.5, 2, 27, 3.4, 2.6, 1.05)}
+                    <rect x="0" y="19.3" width="200" height="8.3" fill="rgba(0,0,0,0.14)"/>
+
+                    <!-- advertising hoarding (LED style) -->
+                    <rect x="0" y="27.6" width="200" height="2.6" fill="#0a0f16"/>
+                    ${st.adColors.map((c, i) => `<rect x="${(i * 20).toFixed(1)}" y="27.6" width="19" height="2.6" fill="${c}"/>`).join('')}
+
+                    <!-- pitch -->
+                    <rect x="0" y="30.2" width="200" height="29.8" fill="${st.grassColors[0]}"/>
+                    ${buildMowMarkup(st)}
+
+                    <!-- pitch markings -->
+                    <rect x="55" y="30.2" width="90" height="21" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="0.7"/>
+                    <rect x="76" y="30.2" width="48" height="9" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="0.7"/>
+                    <path d="M 78 51.2 A 22 22 0 0 0 122 51.2" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="0.7"/>
+                    <path d="M 22 60 A 5 5 0 0 0 22 50" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="0.7"/>
+                    <path d="M 178 60 A 5 5 0 0 1 178 50" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="0.7"/>
+                    <path d="M 22 58 L 18 55.5 M 18 55.5 L 18 51.5 L 21.5 53" fill="none" stroke="#e8524f" stroke-width="0.6"/>
+                    <path d="M 178 58 L 182 55.5 M 182 55.5 L 182 51.5 L 178.5 53" fill="none" stroke="#e8524f" stroke-width="0.6"/>
+
+                    <!-- goal -->
+                    <rect x="82" y="33" width="36" height="10" fill="url(#net_${st.id})"/>
+                    <rect x="80.5" y="31.5" width="39" height="2" fill="${postColor}"/>
+                    <rect x="80.5" y="31.5" width="2" height="12.5" fill="${postColor}"/>
+                    <rect x="117.5" y="31.5" width="2" height="12.5" fill="${postColor}"/>
+                    <path d="M 82.5 31.5 L 75 27.5 M 117.5 31.5 L 125 27.5" stroke="${postColor}" stroke-width="0.9" opacity="0.7"/>
+
+                    <!-- penalty spot -->
+                    <circle cx="100" cy="45.5" r="1.3" fill="#fff" stroke="rgba(0,0,0,0.4)" stroke-width="0.4"/>
+
+                    <rect width="200" height="60" fill="url(#vign_${st.id})"/>
+
+                    ${st.weather === 'rain' ? `
+                    <rect width="200" height="60" fill="rgba(10,16,26,0.22)"/>
+                    <g stroke="rgba(210,225,255,0.6)" stroke-width="1" stroke-linecap="round">
+                      <line x1="30" y1="10" x2="26" y2="20"/>
+                      <line x1="60" y1="4" x2="56" y2="16"/>
+                      <line x1="95" y1="12" x2="91" y2="24"/>
+                      <line x1="130" y1="6" x2="126" y2="18"/>
+                      <line x1="160" y1="14" x2="156" y2="26"/>
+                      <line x1="45" y1="30" x2="41" y2="40"/>
+                      <line x1="110" y1="34" x2="106" y2="44"/>
+                      <line x1="150" y1="36" x2="146" y2="46"/>
+                    </g>` : ''}
+                  </svg>
+                `;
+                }
+
+                function buildStadiumCards() {
+                    stadiumGrid.innerHTML = '';
+                    STADIUMS.forEach((st, idx) => {
+                        const card = document.createElement('div');
+                        card.className = 'stadium-card' + (idx === currentStadiumIdx ? ' selected' : '');
+                        const prev = document.createElement('div');
+                        prev.className = 'stadium-preview';
+                        prev.innerHTML = buildStadiumPreviewSVG(st);
+                        const title = document.createElement('div');
+                        title.className = 'stadium-name';
+                        title.textContent = st.name;
+                        const desc = document.createElement('div');
+                        desc.className = 'stadium-desc';
+                        desc.textContent = st.desc;
+                        card.appendChild(prev);
+                        card.appendChild(title);
+                        card.appendChild(desc);
+                        card.addEventListener('click', () => { audio();
+                            currentStadiumIdx = idx;
+                            buildStadiumCards(); });
+                        stadiumGrid.appendChild(card);
+                    });
+                }
+                buildStadiumCards();
+
+                // ================= Pause logic =================
+                function togglePause() {
+                    if (state === 'menu' || state === 'over' || state === 'transition') return;
+                    paused = !paused;
+                    pauseOverlay.classList.toggle('active', paused);
+                    if (paused) {
+                        pauseBtn.textContent = '▶';
+                        keeperStatus.textContent = '⏸ PAUSED';
+                    } else {
+                        pauseBtn.textContent = '⏸';
+                        updateKeeperStatus();
+                        // Resume audio context if suspended
+                        try { if (actx && actx.state === 'suspended') actx.resume(); } catch (e) {}
+                    }
+                }
+
+                function goToMenu() {
+                    paused = false;
+                    pauseOverlay.classList.remove('active');
+                    pauseBtn.textContent = '⏸';
+                    // Reset game state
+                    round = 0;
+                    playerGoals = 0;
+                    opponentGoals = 0;
+                    resultsPlayer = [];
+                    resultsOpponent = [];
+                    shotHistory = [];
+                    keeper.patternMemory = [];
+                    jerseySwapped = false;
+                    state = 'menu';
+                    overlay.style.display = 'none';
+                    kitBadge.className = '';
+                    kitBadge.textContent = '⚽ KIT: HOME';
+                    mainMenu.classList.remove('hidden');
+                    pauseBtn.classList.add('hidden');
+                    updateHud();
+                    // Reset keeper
+                    keeper.animT = -1;
+                    keeper.diveDir = 0;
+                    keeper.targetHeight = 0;
+                    keeper.tookOff = false;
+                    keeper.landed = false;
+                    keeper.reactionDelay = 0;
+                    keeper.reactionTimer = 0;
+                    keeper.hasReacted = false;
+                    keeper.diveSpeed = 1.0;
+                    taker.runProgress = 0;
+                    taker.kickProgress = 0;
+                    shotLaunched = false;
+                    shot = null;
+                    outcome = null;
+                    deflectionVec = null;
+                    ballSpinVec = { wx: 0, wy: 0, wz: 0 };
+                    aim = { x: 0, y: 0 };
+                    power = 0;
+                    powerArc.setAttribute('stroke-dashoffset', 440);
+                    nubReset();
+                    // Hide transition banner
+                    transBanner.classList.remove('show');
+                    messageEl.classList.remove('show');
+                    // Try to resume audio
+                    try { if (actx && actx.state === 'suspended') actx.resume(); } catch (e) {}
+                }
+
+                // Pause button event listeners
+                pauseBtn.addEventListener('click', togglePause);
+                pauseBtn.addEventListener('touchend', function(e) { e.preventDefault();
+                    togglePause(); });
+                resumeBtn.addEventListener('click', togglePause);
+                resumeBtn.addEventListener('touchend', function(e) { e.preventDefault();
+                    togglePause(); });
+                goToMenuBtn.addEventListener('click', goToMenu);
+                goToMenuBtn.addEventListener('touchend', function(e) { e.preventDefault();
+                    goToMenu(); });
+
+                // ================= EVENT LISTENERS =================
+                console.log('Attaching event listeners...');
+                startBtn.addEventListener('click', function(e) {
+                    console.log('Start button clicked');
+                    try {
+                        audio();
+                        mainMenu.classList.add('hidden');
+                        jerseySwapped = false;
+                        resetFullGame();
+                    } catch (err) {
+                        console.error('Error starting game:', err);
+                    }
+                });
+
+                stadiumSelectBtn.addEventListener('click', function() {
+                    console.log('Stadium select clicked');
+                    audio();
+                    stadiumMenu.classList.add('active');
+                });
+
+                stadiumBackBtn.addEventListener('click', function() {
+                    console.log('Stadium back clicked');
+                    audio();
+                    stadiumMenu.classList.remove('active');
+                });
+
+                exitBtn.addEventListener('click', function() {
+                    console.log('Exit clicked');
+                    audio();
+                    try { window.close(); } catch (e) {}
+                    menuContent.style.display = 'none';
+                    exitCard.style.display = 'flex';
+                });
+
+                reopenBtn.addEventListener('click', function() {
+                    console.log('Reopen clicked');
+                    audio();
+                    exitCard.style.display = 'none';
+                    menuContent.style.display = 'flex';
+                });
+
+                function resetFullGame() {
+                    console.log('resetFullGame called');
+                    round = 0;
+                    playerGoals = 0;
+                    opponentGoals = 0;
+                    resultsPlayer = [];
+                    resultsOpponent = [];
+                    shotHistory = [];
+                    keeper.patternMemory = [];
+                    jerseySwapped = false;
+                    overlay.style.display = 'none';
+                    kitBadge.className = 'show';
+                    kitBadge.textContent = '⚽ KIT: HOME (RED)';
+                    paused = false;
+                    pauseOverlay.classList.remove('active');
+                    pauseBtn.textContent = '⏸';
+                    nextRound();
+                }
+
+                // ================= Field geometry =================
+                function fieldRect() { const top = H * 0.13,
+                        bottom = H * 0.97; return { top, bottom, height: bottom - top }; }
+
+                function goalGeom() {
+                    const f = fieldRect();
+                    const goalTopY = f.top + f.height * 0.03;
+                    const goalBotY = f.top + f.height * 0.19;
+                    const cx = W / 2;
+                    const topHalfW = W * 0.305,
+                        botHalfW = W * 0.32;
+                    return { goalTopY, goalBotY, cx, topHalfW, botHalfW };
+                }
+
+                function ballRestPos() { const f = fieldRect(); return { x: W / 2, y: f.top + f.height * 0.76 }; }
+
+                function fieldHalfWidthAt(norm) { const wTop = W * 0.34,
+                        wBot = W * 0.62; return wTop + (wBot - wTop) * norm; }
+
+                // ================= Drawing =================
+                function prand(x, y) {
+                    const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
+                    return s - Math.floor(s);
+                }
+
+                function draw(dt) {
+                    const st = STADIUMS[currentStadiumIdx];
+                    ctx.clearRect(0, 0, W, H);
+                    drawSky(st);
+                    drawStand(st);
+                    drawFloodlights(st);
+                    drawField(st);
+                    drawGoal(false, st);
+                    drawAimReticle();
+                    drawKeeperGloveTarget();
+                    drawKeeper(st);
+                    drawParticles();
+                    drawBallShadowAndBall();
+                    drawTaker();
+                    drawGoal(true, st);
+                    updateParticles(dt);
+                    if (st.weather === 'rain') {
+                        updateRain(dt);
+                        drawRainMood();
+                        drawRainStreaks();
+                    }
+                }
+
+                function drawSky(st) {
+                    const g = ctx.createLinearGradient(0, 0, 0, H * 0.16);
+                    g.addColorStop(0, st.skyGrad[0]);
+                    g.addColorStop(1, st.skyGrad[1]);
+                    ctx.fillStyle = g;
+                    ctx.fillRect(0, 0, W, H * 0.16);
+
+                    // Soft atmospheric haze band where sky meets the stadium roofline
+                    ctx.save();
+                    const haze = ctx.createLinearGradient(0, H * 0.09, 0, H * 0.16);
+                    haze.addColorStop(0, 'rgba(255,255,255,0)');
+                    haze.addColorStop(1, 'rgba(255,255,255,0.16)');
+                    ctx.fillStyle = haze;
+                    ctx.fillRect(0, H * 0.09, W, H * 0.07);
+
+                    // Faint drifting cloud bands for depth (skipped for stylised night domes)
+                    if (st.grassType !== 'cyber_grid') {
+                        ctx.globalAlpha = 0.10;
+                        ctx.fillStyle = '#ffffff';
+                        for (let i = 0; i < 3; i++) {
+                            const cy = H * (0.02 + i * 0.035);
+                            const cx = W * ((i * 0.37 + 0.15) % 1);
+                            const cw = W * 0.22;
+                            ctx.beginPath();
+                            ctx.ellipse(cx, cy, cw, cw * 0.18, 0, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                        ctx.globalAlpha = 1;
+                    }
+                    ctx.restore();
+                }
+
+                function drawFloodlights(st) {
+                    const baseY = H * 0.005;
+                    const towerBottom = H * 0.112;
+                    [W * 0.05, W * 0.95].forEach((x) => {
+                        ctx.save();
+                        ctx.translate(x, 0);
+
+                        const glow = ctx.createRadialGradient(0, baseY + 5, 2, 0, baseY + 5, 65);
+                        glow.addColorStop(0, st.floodlightGlow);
+                        glow.addColorStop(1, 'rgba(0,0,0,0)');
+                        ctx.fillStyle = glow;
+                        ctx.beginPath();
+                        ctx.arc(0, baseY + 5, 65, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        ctx.save();
+                        ctx.globalAlpha = 0.25;
+                        const beam = ctx.createLinearGradient(0, baseY, 0, towerBottom);
+                        beam.addColorStop(0, st.floodlightGlow);
+                        beam.addColorStop(1, 'rgba(0,0,0,0)');
+                        ctx.fillStyle = beam;
+                        ctx.beginPath();
+                        ctx.moveTo(-15, towerBottom);
+                        ctx.lineTo(-3, baseY);
+                        ctx.lineTo(3, baseY);
+                        ctx.lineTo(15, towerBottom);
+                        ctx.closePath();
+                        ctx.fill();
+                        ctx.restore();
+
+                        ctx.strokeStyle = '#3a3f4a';
+                        ctx.lineWidth = 1.2;
+                        ctx.beginPath();
+                        ctx.moveTo(-6, towerBottom);
+                        ctx.lineTo(-2, baseY);
+                        ctx.moveTo(6, towerBottom);
+                        ctx.lineTo(2, baseY);
+                        const braces = 5;
+                        for (let i = 0; i <= braces; i++) {
+                            const t = i / braces;
+                            const y = towerBottom + (baseY - towerBottom) * t;
+                            const hw = 6 + (2 - 6) * t;
+                            ctx.moveTo(-hw, y);
+                            ctx.lineTo(hw, y);
+                        }
+                        for (let i = 0; i < braces; i++) {
+                            const t0 = i / braces,
+                                t1 = (i + 1) / braces;
+                            const y0 = towerBottom + (baseY - towerBottom) * t0,
+                                y1 = towerBottom + (baseY - towerBottom) * t1;
+                            const hw0 = 6 + (2 - 6) * t0,
+                                hw1 = 6 + (2 - 6) * t1;
+                            ctx.moveTo(-hw0, y0);
+                            ctx.lineTo(hw1, y1);
+                            ctx.moveTo(hw0, y0);
+                            ctx.lineTo(-hw1, y1);
+                        }
+                        ctx.stroke();
+
+                        ctx.fillStyle = '#e8edf2';
+                        ctx.fillRect(-11, baseY - 4, 22, 5);
+                        ctx.fillStyle = '#fff9e0';
+                        for (let i = -1.5; i <= 1.5; i++)
+                            for (let j = 0; j < 2; j++) {
+                                ctx.beginPath();
+                                ctx.arc(i * 6, baseY - 4 + 1.5 + j * 2, 0.9, 0, Math.PI * 2);
+                                ctx.fill();
+                            }
+                        ctx.restore();
+                    });
+                }
+
+                function drawCrowdRows(st, yTop, yBot, rows, cols, scale) {
+                    scale = scale || 1;
+                    const skin = ['#e8c39e', '#c98a5b', '#8a5a3b', '#f0d0b0', '#7a4a2b', '#d9a878'],
+                        shirt = st.standSeats;
+                    const bandH = yBot - yTop,
+                        seatW = W / cols;
+
+                    // Base seating deck (empty seat shells) so rows read as real stadium seats,
+                    // not just floating heads
+                    ctx.save();
+                    ctx.fillStyle = 'rgba(0,0,0,0.28)';
+                    for (let r = 0; r < rows; r++) {
+                        const y = yTop + bandH * ((r + 0.5) / rows);
+                        for (let c = 0; c < cols; c++) {
+                            const x = (c + 0.5) * seatW + (r % 2 === 0 ? seatW / 2 : 0);
+                            ctx.fillRect(x - seatW * 0.24 * scale, y - seatW * 0.06 * scale, seatW * 0.48 * scale,
+                                seatW * 0.5 * scale);
+                        }
+                    }
+                    ctx.restore();
+
+                    for (let r = 0; r < rows; r++) {
+                        const rowN = rows > 1 ? r / (rows - 1) : 0;
+                        // Rows further back (smaller r index, nearer the roof) sit slightly in shadow
+                        const depthShade = 0.72 + 0.28 * rowN;
+                        const y = yTop + bandH * ((r + 0.5) / rows);
+                        for (let c = 0; c < cols; c++) {
+                            const x = (c + 0.5) * seatW + (r % 2 === 0 ? seatW / 2 : 0);
+                            const seed = (c * 7 + r * 13 + rows * 5) % 17;
+                            const jitter = prand(c * 3.1 + r * 9.7, r * 5.3 - c * 1.7);
+
+                            // ~8% empty seats for a lived-in, non-uniform crowd
+                            if (jitter > 0.92) continue;
+
+                            const sizeJit = 0.86 + jitter * 0.28;
+                            const seatW2 = seatW * scale * sizeJit;
+
+                            ctx.save();
+                            ctx.globalAlpha = depthShade;
+                            // torso
+                            ctx.fillStyle = shirt[seed % shirt.length];
+                            ctx.fillRect(x - seatW2 * 0.22, y, seatW2 * 0.44, seatW2 * 0.36);
+                            // subtle shading on one side of torso for form
+                            ctx.fillStyle = 'rgba(0,0,0,0.18)';
+                            ctx.fillRect(x + seatW2 * 0.06, y, seatW2 * 0.16, seatW2 * 0.36);
+                            // head
+                            ctx.fillStyle = skin[(seed + Math.floor(jitter * 6)) % skin.length];
+                            ctx.beginPath();
+                            ctx.arc(x, y - seatW2 * 0.14, seatW2 * 0.2, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.restore();
+                        }
+                    }
+
+                    // Occasional camera-flash sparkle for a lively, realistic broadcast feel
+                    const flashSeed = Math.floor(performance.now() / 220);
+                    if (prand(flashSeed, yTop) > 0.965) {
+                        const fx = W * prand(flashSeed * 1.7, 3.1);
+                        const fy = yTop + bandH * prand(flashSeed * 2.3, 7.9);
+                        ctx.save();
+                        ctx.globalAlpha = 0.85;
+                        ctx.fillStyle = '#ffffff';
+                        ctx.beginPath();
+                        ctx.arc(fx, fy, 2.2, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.restore();
+                    }
+                }
+
+                function drawStand(st) {
+                    const roofH = H * 0.012,
+                        upperH = H * 0.040,
+                        gapH = H * 0.007,
+                        lowerH = H * 0.051,
+                        hoardH = H * 0.020;
+                    const roofY0 = 0,
+                        roofY1 = roofH;
+                    const upperY0 = roofY1,
+                        upperY1 = upperY0 + upperH;
+                    const gapY0 = upperY1,
+                        gapY1 = gapY0 + gapH;
+                    const lowerY0 = gapY1,
+                        lowerY1 = lowerY0 + lowerH;
+                    const hoardY0 = lowerY1,
+                        hoardY1 = hoardY0 + hoardH;
+
+                    [
+                        [0, W * 0.085, W * 0.105],
+                        [W, W * 0.915, W * 0.895]
+                    ].forEach(([edgeX, roofX, baseX]) => {
+                        ctx.fillStyle = st.standBg[0];
+                        ctx.beginPath();
+                        ctx.moveTo(edgeX, roofY0);
+                        ctx.lineTo(roofX, roofY0);
+                        ctx.lineTo(baseX, lowerY1);
+                        ctx.lineTo(edgeX, lowerY1);
+                        ctx.closePath();
+                        ctx.fill();
+                        ctx.fillStyle = 'rgba(0,0,0,0.35)';
+                        ctx.fill();
+                    });
+
+                    ctx.fillStyle = st.standBg[1];
+                    ctx.beginPath();
+                    ctx.moveTo(W * 0.085, roofY0 + roofH * 0.15);
+                    ctx.quadraticCurveTo(W * 0.5, -roofH * 0.6, W * 0.915, roofY0 + roofH * 0.15);
+                    ctx.lineTo(W * 0.915, roofY1);
+                    ctx.quadraticCurveTo(W * 0.5, roofH * 0.35, W * 0.085, roofY1);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(W * 0.085, roofY0 + roofH * 0.15);
+                    ctx.quadraticCurveTo(W * 0.5, -roofH * 0.6, W * 0.915, roofY0 + roofH * 0.15);
+                    ctx.stroke();
+
+                    let g = ctx.createLinearGradient(0, upperY0, 0, upperY1);
+                    g.addColorStop(0, st.standBg[1]);
+                    g.addColorStop(1, st.standBg[0]);
+                    ctx.fillStyle = g;
+                    ctx.fillRect(0, upperY0, W, upperY1 - upperY0);
+                    drawCrowdRows(st, upperY0 + (upperY1 - upperY0) * 0.08, upperY1, 2, 34, 0.8);
+                    ctx.fillStyle = 'rgba(0,0,0,0.22)';
+                    ctx.fillRect(0, upperY0, W, upperY1 - upperY0);
+
+                    // Roof truss shadows raking across the upper tier for structural depth
+                    ctx.save();
+                    ctx.globalAlpha = 0.14;
+                    ctx.strokeStyle = '#000';
+                    ctx.lineWidth = Math.max(1, H * 0.0016);
+                    const trussCount = 9;
+                    for (let i = 0; i <= trussCount; i++) {
+                        const u = i / trussCount;
+                        const topX = W * (0.085 + 0.83 * u);
+                        ctx.beginPath();
+                        ctx.moveTo(topX, roofY1);
+                        ctx.lineTo(topX + (W / 2 - topX) * 0.06, upperY1);
+                        ctx.stroke();
+                    }
+                    ctx.restore();
+
+                    const bsW = W * 0.12,
+                        bsH = (upperY1 - upperY0) * 0.66,
+                        bsX = W * 0.70,
+                        bsY = upperY0 + (upperY1 - upperY0) * 0.14;
+                    ctx.fillStyle = '#0a0f16';
+                    ctx.fillRect(bsX - 1, bsY - 1, bsW + 2, bsH + 2);
+                    ctx.fillStyle = '#0e2a44';
+                    ctx.fillRect(bsX, bsY, bsW, bsH);
+                    ctx.fillStyle = '#3ddc61';
+                    ctx.fillRect(bsX + bsW * 0.06, bsY + bsH * 0.15, bsW * 0.36, bsH * 0.3);
+                    ctx.fillStyle = '#e8c93f';
+                    ctx.fillRect(bsX + bsW * 0.48, bsY + bsH * 0.15, bsW * 0.30, bsH * 0.3);
+                    ctx.fillStyle = '#e8524f';
+                    ctx.fillRect(bsX + bsW * 0.06, bsY + bsH * 0.55, bsW * 0.6, bsH * 0.25);
+
+                    ctx.fillStyle = '#0c1119';
+                    ctx.fillRect(0, gapY0, W, gapY1 - gapY0);
+                    ctx.globalAlpha = 0.15;
+                    ctx.fillStyle = st.floodlightGlow;
+                    ctx.fillRect(0, gapY0, W, gapY1 - gapY0);
+                    ctx.globalAlpha = 1;
+
+                    g = ctx.createLinearGradient(0, lowerY0, 0, lowerY1);
+                    g.addColorStop(0, st.standBg[0]);
+                    g.addColorStop(1, st.standBg[1]);
+                    ctx.fillStyle = g;
+                    ctx.fillRect(0, lowerY0, W, lowerY1 - lowerY0);
+                    drawCrowdRows(st, lowerY0, lowerY1, 3, 34, 1.05);
+                    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+                    ctx.fillRect(0, lowerY0, W, lowerY1 - lowerY0);
+
+                    ctx.fillStyle = '#05070a';
+                    ctx.fillRect(0, hoardY0, W, hoardY1 - hoardY0);
+                    const adColors = st.adColors;
+                    const hoardH2 = hoardY1 - hoardY0;
+                    for (let i = 0; i < 10; i++) {
+                        const px = i * (W / 10),
+                            pw = W / 10 - 2;
+                        const panelGrad = ctx.createLinearGradient(0, hoardY0, 0, hoardY1);
+                        panelGrad.addColorStop(0, adColors[i % adColors.length]);
+                        panelGrad.addColorStop(1, adColors[i % adColors.length]);
+                        ctx.fillStyle = panelGrad;
+                        ctx.fillRect(px, hoardY0, pw, hoardH2);
+                        // glossy top highlight strip, like an LED perimeter board catching floodlight
+                        ctx.fillStyle = 'rgba(255,255,255,0.22)';
+                        ctx.fillRect(px, hoardY0, pw, hoardH2 * 0.22);
+                        // bottom shade for panel depth
+                        ctx.fillStyle = 'rgba(0,0,0,0.22)';
+                        ctx.fillRect(px, hoardY0 + hoardH2 * 0.72, pw, hoardH2 * 0.28);
+                        // panel seam
+                        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+                        ctx.fillRect(px + pw, hoardY0, 2, hoardH2);
+                    }
+                }
+
+                function drawField(st) {
+                    const f = fieldRect();
+                    const bg = ctx.createLinearGradient(0, f.top, 0, f.bottom);
+                    bg.addColorStop(0, st.grassColors[0]);
+                    bg.addColorStop(1, st.grassColors[1]);
+                    ctx.fillStyle = bg;
+                    ctx.fillRect(0, f.top, W, f.height);
+                    const bands = 9;
+                    for (let i = 0; i < bands; i++) {
+                        const n0 = i / bands,
+                            n1 = (i + 1) / bands;
+                        const y0 = f.top + f.height * n0,
+                            y1 = f.top + f.height * n1;
+                        const hw0 = fieldHalfWidthAt(n0),
+                            hw1 = fieldHalfWidthAt(n1);
+                        if (st.grassType === 'checkered') {
+                            const vCols = 6;
+                            for (let c = 0; c < vCols; c++) {
+                                const u0 = c / vCols,
+                                    u1 = (c + 1) / vCols;
+                                const x0_l = (W / 2 - hw0) + hw0 * 2 * u0,
+                                    x0_r = (W / 2 - hw0) + hw0 * 2 * u1;
+                                const x1_l = (W / 2 - hw1) + hw1 * 2 * u0,
+                                    x1_r = (W / 2 - hw1) + hw1 * 2 * u1;
+                                ctx.fillStyle = (i + c) % 2 === 0 ? `rgba(255,255,255,${st.grassStripeAlpha[0]})` :
+                                    `rgba(0,0,0,${st.grassStripeAlpha[1]})`;
+                                ctx.beginPath();
+                                ctx.moveTo(x0_l, y0);
+                                ctx.lineTo(x0_r, y0);
+                                ctx.lineTo(x1_r, y1);
+                                ctx.lineTo(x1_l, y1);
+                                ctx.closePath();
+                                ctx.fill();
+                            }
+                        } else if (st.grassType === 'cyber_grid') {
+                            ctx.fillStyle = i % 2 === 0 ? `rgba(0,240,255,${st.grassStripeAlpha[0]})` :
+                                `rgba(255,0,85,${st.grassStripeAlpha[1]})`;
+                            ctx.beginPath();
+                            ctx.moveTo(W / 2 - hw0, y0);
+                            ctx.lineTo(W / 2 + hw0, y0);
+                            ctx.lineTo(W / 2 + hw1, y1);
+                            ctx.lineTo(W / 2 - hw1, y1);
+                            ctx.closePath();
+                            ctx.fill();
+                            ctx.strokeStyle = 'rgba(0,240,255,0.25)';
+                            ctx.lineWidth = 1;
+                            ctx.beginPath();
+                            ctx.moveTo(W / 2 - hw0, y0);
+                            ctx.lineTo(W / 2 + hw0, y0);
+                            ctx.stroke();
+                        } else {
+                            ctx.fillStyle = i % 2 === 0 ? `rgba(255,255,255,${st.grassStripeAlpha[0]})` :
+                                `rgba(0,0,0,${st.grassStripeAlpha[1]})`;
+                            ctx.beginPath();
+                            ctx.moveTo(W / 2 - hw0, y0);
+                            ctx.lineTo(W / 2 + hw0, y0);
+                            ctx.lineTo(W / 2 + hw1, y1);
+                            ctx.lineTo(W / 2 - hw1, y1);
+                            ctx.closePath();
+                            ctx.fill();
+                        }
+                    }
+                    if (st.grassType === 'cyber_grid') {
+                        const vLines = 8;
+                        ctx.strokeStyle = 'rgba(0,240,255,0.2)';
+                        ctx.lineWidth = 1;
+                        for (let c = 1; c < vLines; c++) { const u = c / vLines;
+                            const xTop = (W / 2 - fieldHalfWidthAt(0)) + fieldHalfWidthAt(0) * 2 * u;
+                            const xBot = (W / 2 - fieldHalfWidthAt(1)) + fieldHalfWidthAt(1) * 2 * u;
+                            ctx.beginPath();
+                            ctx.moveTo(xTop, f.top);
+                            ctx.lineTo(xBot, f.bottom);
+                            ctx.stroke(); }
+                    }
+                    // Fine grass-blade speckle texture for a real turf feel (skipped on stylised pitches)
+                    if (st.grassType !== 'cyber_grid') {
+                        ctx.save();
+                        const bladeRows = 46,
+                            bladeCols = 30;
+                        for (let r = 0; r < bladeRows; r++) {
+                            const n = r / bladeRows;
+                            const y = f.top + f.height * n;
+                            const hw = fieldHalfWidthAt(n);
+                            for (let c = 0; c < bladeCols; c++) {
+                                const j1 = prand(r * 3.7, c * 5.1);
+                                if (j1 > 0.55) continue;
+                                const x = (W / 2 - hw) + hw * 2 * ((c + j1) / bladeCols);
+                                const j2 = prand(c * 9.3, r * 2.1);
+                                ctx.globalAlpha = 0.05 + j2 * 0.05;
+                                ctx.fillStyle = j2 > 0.5 ? '#ffffff' : '#000000';
+                                const bw = Math.max(0.6, hw * 0.006),
+                                    bh = bw * 3;
+                                ctx.fillRect(x, y, bw, bh);
+                            }
+                        }
+                        ctx.restore();
+
+                        // Worn/scuffed turf patches: center circle, penalty spot and goalmouth
+                        ctx.save();
+                        const wearSpots = [
+                            [0.5, 0.5, 0.10], [0.5, 0.76, 0.055], [0.5, 0.22, 0.09],
+                            [0.38, 0.9, 0.05], [0.62, 0.9, 0.05]
+                        ];
+                        wearSpots.forEach(([u, n, rel]) => {
+                            const hw = fieldHalfWidthAt(n);
+                            const px = (W / 2 - hw) + hw * 2 * u;
+                            const py = f.top + f.height * n;
+                            const rad = hw * rel;
+                            const wg = ctx.createRadialGradient(px, py, 0, px, py, rad);
+                            wg.addColorStop(0, 'rgba(120,90,50,0.14)');
+                            wg.addColorStop(1, 'rgba(120,90,50,0)');
+                            ctx.fillStyle = wg;
+                            ctx.beginPath();
+                            ctx.ellipse(px, py, rad, rad * 0.55, 0, 0, Math.PI * 2);
+                            ctx.fill();
+                        });
+                        ctx.restore();
+
+                        // Gentle vignette where the pitch meets the stands, for depth and realism
+                        ctx.save();
+                        const vig = ctx.createLinearGradient(0, f.top, 0, f.top + f.height * 0.05);
+                        vig.addColorStop(0, 'rgba(0,0,0,0.22)');
+                        vig.addColorStop(1, 'rgba(0,0,0,0)');
+                        ctx.fillStyle = vig;
+                        ctx.fillRect(0, f.top, W, f.height * 0.05);
+                        ctx.restore();
+                    }
+
+                    const g = goalGeom();
+                    ctx.strokeStyle = st.grassType === 'cyber_grid' ? '#00f0ff' : 'rgba(255,255,255,0.9)';
+                    ctx.lineWidth = 3;
+                    const boxTopY = g.goalBotY,
+                        boxBotY = f.top + f.height * 0.68;
+                    const boxTopHalf = g.botHalfW * 1.08,
+                        boxBotHalf = fieldHalfWidthAt(0.68) * 0.72;
+                    ctx.beginPath();
+                    ctx.moveTo(g.cx - boxTopHalf, boxTopY);
+                    ctx.lineTo(g.cx - boxBotHalf, boxBotY);
+                    ctx.lineTo(g.cx + boxBotHalf, boxBotY);
+                    ctx.lineTo(g.cx + boxTopHalf, boxTopY);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.ellipse(g.cx, boxBotY, boxBotHalf * 0.42, 14, 0, 0, Math.PI, false);
+                    ctx.stroke();
+                    const spot = ballRestPos();
+                    ctx.fillStyle = st.grassType === 'cyber_grid' ? '#ff0055' : 'rgba(255,255,255,0.9)';
+                    ctx.beginPath();
+                    ctx.arc(spot.x, spot.y, 4, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    if (st.grassType === 'wet_stripes') {
+                        ctx.save();
+                        const sheen = ctx.createLinearGradient(0, f.top, 0, f.bottom);
+                        sheen.addColorStop(0, 'rgba(255,255,255,0.12)');
+                        sheen.addColorStop(0.5, 'rgba(255,255,255,0.03)');
+                        sheen.addColorStop(1, 'rgba(140,175,210,0.10)');
+                        ctx.fillStyle = sheen;
+                        ctx.beginPath();
+                        ctx.moveTo(W / 2 - fieldHalfWidthAt(0), f.top);
+                        ctx.lineTo(W / 2 + fieldHalfWidthAt(0), f.top);
+                        ctx.lineTo(W / 2 + fieldHalfWidthAt(1), f.bottom);
+                        ctx.lineTo(W / 2 - fieldHalfWidthAt(1), f.bottom);
+                        ctx.closePath();
+                        ctx.fill();
+                        const puddleSpots = [
+                            [0.26, 0.5], [0.7, 0.6], [0.45, 0.78], [0.15, 0.85]
+                        ];
+                        puddleSpots.forEach(([u, n]) => {
+                            const hw = fieldHalfWidthAt(n);
+                            const px = (W / 2 - hw) + hw * 2 * u;
+                            const py = f.top + f.height * n;
+                            const pw = hw * 0.20,
+                                ph = pw * 0.30;
+                            const pg = ctx.createLinearGradient(px, py - ph, px, py + ph);
+                            pg.addColorStop(0, 'rgba(210,230,255,0.32)');
+                            pg.addColorStop(1, 'rgba(110,145,185,0.14)');
+                            ctx.fillStyle = pg;
+                            ctx.beginPath();
+                            ctx.ellipse(px, py, pw, ph, 0, 0, Math.PI * 2);
+                            ctx.fill();
+                            ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+                            ctx.lineWidth = 1;
+                            ctx.beginPath();
+                            ctx.ellipse(px, py, pw, ph, 0, 0, Math.PI * 2);
+                            ctx.stroke();
+                        });
+                        ctx.restore();
+                    }
+                }
+
+                function draw3DTube(x1, y1, x2, y2, radius, colorTheme) {
+                    const dx = x2 - x1,
+                        dy = y2 - y1,
+                        len = Math.hypot(dx, dy);
+                    if (len === 0) return;
+                    const nx = -dy / len,
+                        ny = dx / len;
+                    ctx.save();
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+                    ctx.lineWidth = radius * 2.4;
+                    ctx.beginPath();
+                    ctx.moveTo(x1 + 1.5, y1 + 2);
+                    ctx.lineTo(x2 + 1.5, y2 + 2);
+                    ctx.stroke();
+                    const grad = ctx.createLinearGradient(x1 + nx * radius, y1 + ny * radius, x1 - nx * radius, y1 - ny *
+                    radius);
+                    if (colorTheme === 'white') { grad.addColorStop(0, '#606770');
+                        grad.addColorStop(0.18, '#ffffff');
+                        grad.addColorStop(0.48, '#e6ebf0');
+                        grad.addColorStop(0.80, '#9da5b0');
+                        grad.addColorStop(1, '#3e444d'); } else if (colorTheme === 'neon') { grad.addColorStop(0,
+                            '#005577');
+                        grad.addColorStop(0.20, '#00f0ff');
+                        grad.addColorStop(0.50, '#ffffff');
+                        grad.addColorStop(0.80, '#00f0ff');
+                        grad.addColorStop(1, '#003344'); } else if (colorTheme === 'gold') { grad.addColorStop(0,
+                            '#78350f');
+                        grad.addColorStop(0.20, '#fde047');
+                        grad.addColorStop(0.50, '#ffffff');
+                        grad.addColorStop(0.80, '#eab308');
+                        grad.addColorStop(1, '#451a03'); } else if (colorTheme === 'black_gold') { grad.addColorStop(0,
+                            '#0f172a');
+                        grad.addColorStop(0.30, '#334155');
+                        grad.addColorStop(0.50, '#fde047');
+                        grad.addColorStop(0.70, '#1e293b');
+                        grad.addColorStop(1, '#020617'); } else { grad.addColorStop(0, '#111317');
+                        grad.addColorStop(0.25, '#4a505b');
+                        grad.addColorStop(0.60, '#22262d');
+                        grad.addColorStop(1, '#0a0b0d'); }
+                    ctx.strokeStyle = grad;
+                    ctx.lineWidth = radius * 2;
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.stroke();
+                    if (colorTheme === 'white' || colorTheme === 'neon' || colorTheme === 'gold') {
+                        const offX = nx * (radius * 0.42),
+                            offY = ny * (radius * 0.42);
+                        ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+                        ctx.lineWidth = Math.max(1, radius * 0.38);
+                        ctx.beginPath();
+                        ctx.moveTo(x1 + offX, y1 + offY);
+                        ctx.lineTo(x2 + offX, y2 + offY);
+                        ctx.stroke();
+                    }
+                    ctx.restore();
+                }
+
+                function drawGoal(frontFold, st) {
+                    const g = goalGeom();
+                    const FL_top = { x: g.cx - g.topHalfW, y: g.goalTopY },
+                        FR_top = { x: g.cx + g.topHalfW, y: g.goalTopY };
+                    const FL_bot = { x: g.cx - g.botHalfW, y: g.goalBotY },
+                        FR_bot = { x: g.cx + g.botHalfW, y: g.goalBotY };
+                    const depthTopW = g.topHalfW * 0.90,
+                        depthBotW = g.botHalfW * 0.93,
+                        depthYTop = -9,
+                        depthYBot = -14;
+                    const BL_top = { x: g.cx - depthTopW, y: g.goalTopY + depthYTop },
+                        BR_top = { x: g.cx + depthTopW, y: g.goalTopY + depthYTop };
+                    const BL_bot = { x: g.cx - depthBotW, y: g.goalBotY + depthYBot },
+                        BR_bot = { x: g.cx + depthBotW, y: g.goalBotY + depthYBot };
+                    if (!frontFold) {
+                        ctx.save();
+                        ctx.fillStyle = 'rgba(0,0,0,0.22)';
+                        ctx.beginPath();
+                        ctx.moveTo(FL_bot.x - 8, FL_bot.y + 3);
+                        ctx.lineTo(FR_bot.x + 8, FR_bot.y + 3);
+                        ctx.lineTo(BR_bot.x + 12, BR_bot.y + 2);
+                        ctx.lineTo(BL_bot.x - 12, BL_bot.y + 2);
+                        ctx.closePath();
+                        ctx.fill();
+                        draw3DTube(FL_top.x, FL_top.y, BL_top.x, BL_top.y, 3, 'dark');
+                        draw3DTube(FR_top.x, FR_top.y, BR_top.x, BR_top.y, 3, 'dark');
+                        draw3DTube(BL_top.x, BL_top.y, BL_bot.x, BL_bot.y, 3.5, 'dark');
+                        draw3DTube(BR_top.x, BR_top.y, BR_bot.x, BR_bot.y, 3.5, 'dark');
+                        draw3DTube(BL_bot.x, BL_bot.y, BR_bot.x, BR_bot.y, 3, 'dark');
+                        draw3DTube(FL_bot.x, FL_bot.y, BL_bot.x, BL_bot.y, 3, 'dark');
+                        draw3DTube(FR_bot.x, FR_bot.y, BR_bot.x, BR_bot.y, 3, 'dark');
+                        ctx.strokeStyle = st.netColor;
+                        ctx.lineWidth = 0.85;
+                        ctx.lineCap = 'round';
+                        const netCols = 22,
+                            netRows = 13,
+                            depthCols = 8;
+                        // Roof netting: front-to-back strands (slight sag toward the middle)
+                        for (let i = 0; i <= netCols; i++) { const u = i / netCols;
+                            const frontX = FL_top.x + (FR_top.x - FL_top.x) * u;
+                            const backX = BL_top.x + (BR_top.x - BL_top.x) * u;
+                            const sagY = Math.sin(u * Math.PI) * 1.4;
+                            ctx.beginPath();
+                            ctx.moveTo(frontX, FL_top.y);
+                            ctx.lineTo(backX, BL_top.y + sagY);
+                            ctx.stroke(); }
+                        // Roof netting: cross-strands at increasing depth
+                        for (let d = 0; d <= depthCols; d++) { const v = d / depthCols;
+                            const lx = FL_top.x + (BL_top.x - FL_top.x) * v;
+                            const ly = FL_top.y + (BL_top.y - FL_top.y) * v;
+                            const rx = FR_top.x + (BR_top.x - FR_top.x) * v;
+                            const ry = FR_top.y + (BR_top.y - FR_top.y) * v;
+                            const sag = Math.sin(v * Math.PI) * 2.2;
+                            ctx.beginPath();
+                            ctx.moveTo(lx, ly + sag);
+                            ctx.lineTo(rx, ry + sag);
+                            ctx.stroke(); }
+                        // Back panel: vertical strands, with a gentle belly bulge from netting weight
+                        for (let i = 0; i <= netCols; i++) { const u = i / netCols;
+                            const topX = BL_top.x + (BR_top.x - BL_top.x) * u;
+                            const botX = BL_bot.x + (BR_bot.x - BL_bot.x) * u;
+                            const bulge = Math.sin(u * Math.PI) * 4.5;
+                            const midX = (topX + botX) / 2,
+                                midY = (BL_top.y + BL_bot.y) / 2 + 5;
+                            ctx.beginPath();
+                            ctx.moveTo(topX, BL_top.y);
+                            ctx.quadraticCurveTo(midX, midY, botX, BL_bot.y - bulge * 0.15);
+                            ctx.stroke(); }
+                        // Back panel: horizontal strands across the width, sagging more near the bottom
+                        for (let r = 0; r <= netRows; r++) { const v = r / netRows;
+                            const lx = BL_top.x + (BL_bot.x - BL_top.x) * v;
+                            const ly = BL_top.y + (BL_bot.y - BL_top.y) * v;
+                            const rx = BR_top.x + (BR_bot.x - BR_top.x) * v;
+                            const ry = BR_top.y + (BR_bot.y - BR_top.y) * v;
+                            const sag = Math.sin(v * Math.PI) * 3.2 + v * v * 3.5;
+                            ctx.beginPath();
+                            ctx.moveTo(lx, ly + sag);
+                            ctx.lineTo(rx, ry + sag);
+                            ctx.stroke(); }
+                        // Side panels: depth strands, bowed slightly outward like real netting
+                        for (let d = 0; d <= depthCols; d++) { const v = d / depthCols;
+                            const lTopX = FL_top.x + (BL_top.x - FL_top.x) * v;
+                            const lTopY = FL_top.y + (BL_top.y - FL_top.y) * v;
+                            const lBotX = FL_bot.x + (BL_bot.x - FL_bot.x) * v;
+                            const lBotY = FL_bot.y + (BL_bot.y - FL_bot.y) * v;
+                            const bowL = Math.sin(v * Math.PI) * -2.2;
+                            const midLX = (lTopX + lBotX) / 2 + bowL,
+                                midLY = (lTopY + lBotY) / 2;
+                            ctx.beginPath();
+                            ctx.moveTo(lTopX, lTopY);
+                            ctx.quadraticCurveTo(midLX, midLY, lBotX, lBotY);
+                            ctx.stroke();
+                            const rTopX = FR_top.x + (BR_top.x - FR_top.x) * v;
+                            const rTopY = FR_top.y + (BR_top.y - FR_top.y) * v;
+                            const rBotX = FR_bot.x + (BR_bot.x - FR_bot.x) * v;
+                            const rBotY = FR_bot.y + (BR_bot.y - FR_bot.y) * v;
+                            const bowR = Math.sin(v * Math.PI) * 2.2;
+                            const midRX = (rTopX + rBotX) / 2 + bowR,
+                                midRY = (rTopY + rBotY) / 2;
+                            ctx.beginPath();
+                            ctx.moveTo(rTopX, rTopY);
+                            ctx.quadraticCurveTo(midRX, midRY, rBotX, rBotY);
+                            ctx.stroke(); }
+                        ctx.lineCap = 'butt';
+                        const postRadius = st.postRadius;
+                        draw3DTube(FL_top.x, FL_top.y, FL_bot.x, FL_bot.y, postRadius, st.postStyle);
+                        draw3DTube(FR_top.x, FR_top.y, FR_bot.x, FR_bot.y, postRadius, st.postStyle);
+                        draw3DTube(FL_top.x, FL_top.y, FR_top.x, FR_top.y, postRadius, st.postStyle);
+                        const cornerGlowL = ctx.createRadialGradient(FL_top.x, FL_top.y, 1, FL_top.x, FL_top.y,
+                        postRadius * 1.5);
+                        cornerGlowL.addColorStop(0, '#ffffff');
+                        cornerGlowL.addColorStop(0.6, '#cfd6df');
+                        cornerGlowL.addColorStop(1, '#7a828d');
+                        ctx.fillStyle = cornerGlowL;
+                        ctx.beginPath();
+                        ctx.arc(FL_top.x, FL_top.y, postRadius * 1.2, 0, Math.PI * 2);
+                        ctx.fill();
+                        const cornerGlowR = ctx.createRadialGradient(FR_top.x, FR_top.y, 1, FR_top.x, FR_top.y,
+                        postRadius * 1.5);
+                        cornerGlowR.addColorStop(0, '#ffffff');
+                        cornerGlowR.addColorStop(0.6, '#cfd6df');
+                        cornerGlowR.addColorStop(1, '#7a828d');
+                        ctx.fillStyle = cornerGlowR;
+                        ctx.beginPath();
+                        ctx.arc(FR_top.x, FR_top.y, postRadius * 1.2, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.fillStyle = '#222831';
+                        ctx.fillRect(FL_bot.x - postRadius - 1, FL_bot.y - 2, postRadius * 2 + 2, 5);
+                        ctx.fillRect(FR_bot.x - postRadius - 1, FR_bot.y - 2, postRadius * 2 + 2, 5);
+                        ctx.restore();
+                    } else {
+                        ctx.save();
+                        const tieCount = 12;
+                        for (let i = 0; i <= tieCount; i++) { const u = i / tieCount;
+                            const x = BL_bot.x + (BR_bot.x - BL_bot.x) * u;
+                            const y = BL_bot.y;
+                            ctx.fillStyle = '#111';
+                            ctx.fillRect(x - 1.5, y - 1, 3, 3); }
+                        ctx.restore();
+                    }
+                }
+
+                function drawAimReticle() {
+                    if (state !== 'aim' || (aim.x === 0 && aim.y === 0) || isKeeperMode() || paused) return;
+                    const proj = computeTarget();
+                    const pulse = 1 + Math.sin(performance.now() / 120) * 0.08;
+                    ctx.save();
+                    ctx.globalAlpha = 0.75;
+                    ctx.strokeStyle = proj.isMiss ? '#e8524f' : '#fff';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([4, 3]);
+                    ctx.beginPath();
+                    ctx.arc(proj.x, proj.y, 10 * pulse, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                    ctx.fillStyle = proj.isMiss ? '#e8524f' : '#3ddc61';
+                    ctx.beginPath();
+                    ctx.arc(proj.x, proj.y, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([2, 6]);
+                    const start = ballRestPos();
+                    ctx.beginPath();
+                    ctx.moveTo(start.x, start.y);
+                    ctx.lineTo(proj.x, proj.y);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                    ctx.restore();
+                }
+
+                function drawKeeperGloveTarget() {
+                    if (!isKeeperMode() || (state !== 'aim' && state !== 'runup') || paused) return;
+                    const g = goalGeom(),
+                        GH = g.goalBotY - g.goalTopY;
+                    const diveDir = aim.x < -0.2 ? -1 : (aim.x > 0.2 ? 1 : 0);
+                    const hNorm = Math.min(Math.max(-aim.y, 0), 1);
+                    const targetX = g.cx + diveDir * g.topHalfW * 0.82;
+                    const targetY = (g.goalBotY - GH * 0.15) - hNorm * (GH * 0.75);
+                    ctx.save();
+                    ctx.globalAlpha = 0.85;
+                    ctx.strokeStyle = '#00e5ff';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([3, 3]);
+                    ctx.beginPath();
+                    ctx.arc(targetX, targetY, 18, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                    ctx.fillStyle = 'rgba(0,229,255,0.28)';
+                    ctx.beginPath();
+                    ctx.arc(targetX, targetY, 18, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = 'bold 10px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('GLOVE TARGET', targetX, targetY - 22);
+                    ctx.restore();
+                }
+
+                // ================= Realistic Limb Helpers =================
+                function shadeColor(hex, percent) {
+                    if (!hex || hex[0] !== '#' || hex.length < 7) return hex;
+                    const num = parseInt(hex.slice(1), 16);
+                    let r = (num >> 16) + Math.round(255 * (percent / 100));
+                    let g = ((num >> 8) & 0x00FF) + Math.round(255 * (percent / 100));
+                    let b = (num & 0x0000FF) + Math.round(255 * (percent / 100));
+                    r = Math.max(Math.min(255, r), 0);
+                    g = Math.max(Math.min(255, g), 0);
+                    b = Math.max(Math.min(255, b), 0);
+                    return '#' + (0x1000000 + r * 0x10000 + g * 0x100 + b).toString(16).slice(1);
+                }
+
+                // Draws a tapered, rounded-joint polygon segment (gives limbs real
+                // volume instead of a flat stroked line) with a soft cylindrical
+                // shading pass so pant/sleeve fabric reads as 3D, not flat.
+                function drawTaperedSegment(x1, y1, x2, y2, w1, w2, color, opts) {
+                    opts = opts || {};
+                    const dx = x2 - x1,
+                        dy = y2 - y1;
+                    const len = Math.sqrt(dx * dx + dy * dy) || 1;
+                    const nx = -dy / len,
+                        ny = dx / len;
+                    ctx.save();
+                    ctx.fillStyle = color;
+                    ctx.beginPath();
+                    ctx.moveTo(x1 + nx * w1 / 2, y1 + ny * w1 / 2);
+                    ctx.lineTo(x2 + nx * w2 / 2, y2 + ny * w2 / 2);
+                    ctx.lineTo(x2 - nx * w2 / 2, y2 - ny * w2 / 2);
+                    ctx.lineTo(x1 - nx * w1 / 2, y1 - ny * w1 / 2);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(x1, y1, w1 / 2, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(x2, y2, w2 / 2, 0, Math.PI * 2);
+                    ctx.fill();
+                    if (!opts.flat) {
+                        ctx.fillStyle = 'rgba(0,0,0,0.16)';
+                        ctx.beginPath();
+                        ctx.moveTo(x1 - nx * w1 * 0.02, y1 - ny * w1 * 0.02);
+                        ctx.lineTo(x2 - nx * w2 * 0.02, y2 - ny * w2 * 0.02);
+                        ctx.lineTo(x2 - nx * w2 * 0.5, y2 - ny * w2 * 0.5);
+                        ctx.lineTo(x1 - nx * w1 * 0.5, y1 - ny * w1 * 0.5);
+                        ctx.closePath();
+                        ctx.fill();
+                        ctx.fillStyle = 'rgba(255,255,255,0.14)';
+                        ctx.beginPath();
+                        ctx.moveTo(x1 + nx * w1 * 0.5, y1 + ny * w1 * 0.5);
+                        ctx.lineTo(x2 + nx * w2 * 0.5, y2 + ny * w2 * 0.5);
+                        ctx.lineTo(x2 + nx * w2 * 0.08, y2 + ny * w2 * 0.08);
+                        ctx.lineTo(x1 + nx * w1 * 0.08, y1 + ny * w1 * 0.08);
+                        ctx.closePath();
+                        ctx.fill();
+                    }
+                    ctx.restore();
+                }
+
+                // ================= Boots & Gloves =================
+                function drawDetailedBoot(x, y, scale, angle, isRight, upperColor, soleColor) {
+                    ctx.save();
+                    ctx.translate(x, y);
+                    ctx.rotate(angle);
+                    ctx.scale(isRight ? scale : -scale, scale);
+                    ctx.fillStyle = upperColor || '#111';
+                    ctx.beginPath();
+                    ctx.moveTo(-10, -4);
+                    ctx.quadraticCurveTo(-12, -12, -4, -14);
+                    ctx.lineTo(4, -12);
+                    ctx.quadraticCurveTo(10, -8, 14, -2);
+                    ctx.quadraticCurveTo(16, 2, 12, 4);
+                    ctx.lineTo(-8, 4);
+                    ctx.quadraticCurveTo(-11, 2, -10, -4);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.fillStyle = soleColor || '#3ddc61';
+                    ctx.beginPath();
+                    ctx.moveTo(-11, 3);
+                    ctx.lineTo(14, 3);
+                    ctx.lineTo(13, 6);
+                    ctx.lineTo(-10, 6);
+                    ctx.closePath();
+                    ctx.fill();
+                    [-8, -4, 2, 7, 11].forEach(sx => { ctx.fillStyle = '#e6e6e6';
+                        ctx.beginPath();
+                        ctx.moveTo(sx - 1.2, 6);
+                        ctx.lineTo(sx + 1.2, 6);
+                        ctx.lineTo(sx + 0.8, 10);
+                        ctx.lineTo(sx - 0.8, 10);
+                        ctx.closePath();
+                        ctx.fill();
+                        ctx.fillStyle = '#888';
+                        ctx.fillRect(sx - 0.8, 9, 1.6, 1); });
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 1.2;
+                    ctx.beginPath();
+                    ctx.moveTo(0, -10);
+                    ctx.lineTo(6, -6);
+                    ctx.moveTo(2, -12);
+                    ctx.lineTo(8, -8);
+                    ctx.stroke();
+                    ctx.fillStyle = soleColor || '#3ddc61';
+                    ctx.beginPath();
+                    ctx.arc(-6, -6, 2.2, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+
+                function drawRealisticKeeperGlove(x, y, scale, angle, isRight, elbowX, elbowY, gloveColor, isDiving) {
+                    ctx.save();
+                    ctx.translate(x, y);
+                    const forearmAngle = Math.atan2(y - elbowY, x - elbowX);
+                    ctx.rotate(forearmAngle + (isRight ? Math.PI / 2 : -Math.PI / 2));
+                    ctx.scale(isRight ? scale : -scale, scale);
+                    const primaryAccent = gloveColor || '#3ddc61';
+                    const padColor = '#e2e5ea';
+                    const spread = isDiving ? 1.4 : 1;
+                    ctx.fillStyle = '#1c1d21';
+                    ctx.beginPath();
+                    ctx.moveTo(-8 + 4, 8);
+                    ctx.arcTo(-8, 8, -8, 8 + 8, 4);
+                    ctx.arcTo(-8, 8 + 8, 8, 8 + 8, 4);
+                    ctx.arcTo(8, 8 + 8, 8, 8, 4);
+                    ctx.arcTo(8, 8, -8, 8, 4);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.fillStyle = primaryAccent;
+                    ctx.fillRect(-7, 11, 14, 2.5);
+                    ctx.fillStyle = '#111318';
+                    ctx.beginPath();
+                    ctx.moveTo(-9, 8);
+                    ctx.lineTo(-10, -4);
+                    ctx.quadraticCurveTo(-11, -16, -5, -18);
+                    ctx.lineTo(5, -18);
+                    ctx.quadraticCurveTo(11, -16, 10, -4);
+                    ctx.lineTo(9, 8);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.strokeStyle = 'rgba(255,255,255,0.45)';
+                    ctx.lineWidth = 0.8;
+                    ctx.stroke();
+                    ctx.fillStyle = padColor;
+                    ctx.beginPath();
+                    ctx.ellipse(0, -6, 7 * spread, 4.5 * spread, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#8b93a1';
+                    ctx.beginPath();
+                    ctx.ellipse(0, -6, 4 * spread, 2.5 * spread, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    const fingerOffsets = [-6, -2, 2, 6];
+                    ctx.strokeStyle = '#1a1a1a';
+                    ctx.lineWidth = 1.2;
+                    fingerOffsets.forEach(fx => { ctx.beginPath();
+                        ctx.moveTo(fx, -11);
+                        ctx.lineTo(fx * spread, -17.5);
+                        ctx.stroke();
+                        ctx.fillStyle = padColor;
+                        ctx.fillRect(fx * spread - 1.2, -17, 2.4, 3); });
+                    ctx.fillStyle = primaryAccent;
+                    ctx.beginPath();
+                    ctx.moveTo(6, 2);
+                    ctx.quadraticCurveTo(13 * spread, -1, 11 * spread, -8);
+                    ctx.quadraticCurveTo(7 * spread, -7, 5, -2);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath();
+                    ctx.arc(8.5 * spread, -4, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+
+                // ================= ENHANCED GOALKEEPER with Jersey Swap =================
+                function drawKeeper(st) {
+                    const g = goalGeom(),
+                        GH = g.goalBotY - g.goalTopY;
+                    const baseX = g.cx,
+                        baseY = g.goalBotY - GH * 0.12;
+
+                    const isPlayerKeeper = isKeeperMode();
+                    let kit;
+                    if (isPlayerKeeper) {
+                        kit = {
+                            primary: PLAYER_COLORS.primary,
+                            secondary: PLAYER_COLORS.secondary,
+                            shorts: PLAYER_COLORS.shorts,
+                            gloves: PLAYER_COLORS.gloves
+                        };
+                    } else {
+                        kit = st.keeperKit || { primary: '#facc15', secondary: '#ca8a04', shorts: '#1e293b',
+                            gloves: '#facc15' };
+                    }
+
+                    let offX = 0,
+                        offY = 0,
+                        rot = 0,
+                        stretch = 0,
+                        crouch = 0;
+                    const readying = Math.sin(performance.now() / 260) * 4;
+
+                    if (keeper.animT >= 0 && !paused) {
+                        const p = Math.min(keeper.animT, 1);
+                        const diveSpeed = keeper.diveSpeed || 1.0;
+                        if (p < 0.10) {
+                            crouch = Math.sin((p / 0.10) * Math.PI);
+                            offY = crouch * 7;
+                            offX = keeper.diveDir * crouch * 3;
+                            rot = keeper.diveDir * crouch * 0.1;
+                        } else {
+                            const airProgress = (p - 0.10) / 0.90;
+                            const hNorm = keeper.targetHeight !== undefined ? keeper.targetHeight : 0.5;
+                            const currentHalfW = g.topHalfW + (g.botHalfW - g.topHalfW) * (1 - hNorm);
+                            const easeX = Math.sin(airProgress * Math.PI * 0.5);
+                            offX = keeper.diveDir * easeX * currentHalfW * 0.95 * Math.min(diveSpeed, 1.2);
+                            const maxJumpHeight = (0.08 + hNorm * 0.72) * GH;
+                            const jumpY = Math.sin(airProgress * Math.PI) * maxJumpHeight * Math.min(diveSpeed, 1.1);
+                            offY = -jumpY + (airProgress > 0.75 ? (airProgress - 0.75) * 18 : 0);
+                            rot = keeper.diveDir * (0.28 + airProgress * 0.65);
+                            stretch = Math.sin(airProgress * Math.PI) * 0.8 + 0.2;
+                        }
+                    }
+                    const currentX = baseX + offX,
+                        currentY = baseY + offY;
+                    const groundShadowY = baseY + 14;
+                    const altitude = groundShadowY - (currentY + 14);
+                    const shadowScale = Math.max(0.2, 1 - altitude / (GH * 0.85));
+                    ctx.save();
+                    ctx.fillStyle = `rgba(0,0,0,${0.3 * shadowScale})`;
+                    ctx.beginPath();
+                    ctx.ellipse(currentX, groundShadowY, 22 * shadowScale, 6 * shadowScale, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+
+                    ctx.save();
+                    ctx.translate(currentX, currentY + (keeper.animT < 0 && !paused ? readying * 0.3 : 0));
+                    ctx.rotate(rot);
+
+                    let lThigh, lKnee, rThigh, rKnee;
+                    let lArmX, lArmY, rArmX, rArmY;
+                    let torsoAngle = 0;
+                    const isDiving = keeper.animT >= 0;
+
+                    if (keeper.animT < 0) {
+                        lThigh = -0.62;
+                        lKnee = 0.85;
+                        rThigh = 0.62;
+                        rKnee = -0.85;
+                        lArmX = -0.95;
+                        lArmY = 0.30;
+                        rArmX = 0.95;
+                        rArmY = 0.30;
+                        torsoAngle = 0.02;
+                    } else if (crouch > 0) {
+                        lThigh = -0.45;
+                        lKnee = 0.70;
+                        rThigh = 0.45;
+                        rKnee = -0.70;
+                        lArmX = -0.15;
+                        lArmY = -0.30;
+                        rArmX = 0.15;
+                        rArmY = -0.30;
+                        torsoAngle = -0.08;
+                    } else {
+                        const dir = keeper.diveDir,
+                            str = stretch || 0.5;
+                        if (dir < 0) { lArmX = -0.50 - str * 0.3;
+                            lArmY = -0.55 - str * 0.2;
+                            rArmX = -0.15;
+                            rArmY = -0.50 - str * 0.1;
+                            lThigh = -0.50 - str * 0.2;
+                            lKnee = 0.30 + str * 0.15;
+                            rThigh = 0.40 + str * 0.1;
+                            rKnee = -0.20 - str * 0.1;
+                            torsoAngle = -0.12 - str * 0.08; } else if (dir > 0) { rArmX = 0.50 + str * 0.3;
+                            rArmY = -0.55 - str * 0.2;
+                            lArmX = 0.15;
+                            lArmY = -0.50 - str * 0.1;
+                            rThigh = 0.50 + str * 0.2;
+                            rKnee = -0.30 - str * 0.15;
+                            lThigh = -0.40 - str * 0.1;
+                            lKnee = 0.20 + str * 0.1;
+                            torsoAngle = 0.12 + str * 0.08; } else { lArmX = -0.20 - str * 0.1;
+                            lArmY = -0.55 - str * 0.2;
+                            rArmX = 0.20 + str * 0.1;
+                            rArmY = -0.55 - str * 0.2;
+                            lThigh = -0.15 - str * 0.1;
+                            lKnee = 0.20 + str * 0.1;
+                            rThigh = 0.15 + str * 0.1;
+                            rKnee = -0.20 - str * 0.1;
+                            torsoAngle = 0; }
+                    }
+
+                    const armLen = 16;
+                    const shoulderX = 0,
+                        shoulderY = -36;
+                    const lHandX = shoulderX - 10 + lArmX * armLen;
+                    const lHandY = shoulderY + lArmY * armLen;
+                    const rHandX = shoulderX + 10 + rArmX * armLen;
+                    const rHandY = shoulderY + rArmY * armLen;
+
+                    const jg = ctx.createLinearGradient(-14, -36, 14, 0);
+                    jg.addColorStop(0, kit.primary);
+                    jg.addColorStop(1, kit.secondary);
+                    ctx.fillStyle = jg;
+                    ctx.save();
+                    ctx.rotate(torsoAngle);
+                    ctx.beginPath();
+                    ctx.moveTo(-14 + 6, -36);
+                    ctx.arcTo(14, -36, 14, -36 + 36, 6);
+                    ctx.arcTo(14, -36 + 36, -14, -36 + 36, 6);
+                    ctx.arcTo(-14, -36 + 36, -14, -36, 6);
+                    ctx.arcTo(-14, -36, 14, -36, 6);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+                    for (let s = -8; s <= 8; s += 8) ctx.fillRect(s - 1, -34, 2, 32);
+                    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+                    ctx.font = 'bold 12px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(isPlayerKeeper ? '1' : '1', 0, -22);
+                    ctx.restore();
+
+                    ctx.fillStyle = kit.shorts || '#1e293b';
+                    ctx.beginPath();
+                    ctx.moveTo(-16, -6);
+                    ctx.quadraticCurveTo(-18, -2, -16, 2);
+                    ctx.lineTo(-12, 6);
+                    ctx.lineTo(12, 6);
+                    ctx.lineTo(16, 2);
+                    ctx.quadraticCurveTo(18, -2, 16, -6);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+                    ctx.fillRect(-14, -4, 28, 3);
+                    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+                    ctx.fillRect(-16, -6, 2, 12);
+                    ctx.fillRect(14, -6, 2, 12);
+
+                    const skinColor = '#e8b285',
+                        skinDark = '#d9996b';
+
+                    function drawLeg(hx, hy, len1, len2, a1, a2, isLeft) {
+                        const kx = hx + Math.sin(a1) * len1,
+                            ky = hy + Math.cos(a1) * len1;
+                        const fx = kx + Math.sin(a1 + a2) * len2,
+                            fy = ky + Math.cos(a1 + a2) * len2;
+                        const pantsMain = kit.shorts || '#1e293b';
+                        const pantsShade = shadeColor(pantsMain, -14);
+                        ctx.save();
+                        // thigh (full-length track pant, tapered + shaded cylinder)
+                        drawTaperedSegment(hx, hy, kx, ky, 11.5, 9, pantsMain);
+                        // lower leg (pant continues all the way to the ankle)
+                        drawTaperedSegment(kx, ky, fx, fy, 9, 6.8, pantsShade);
+                        // side piping stripe running down the outer seam
+                        const seamT1x = hx + (kx - hx) * 0.15,
+                            seamT1y = hy + (ky - hy) * 0.15;
+                        drawTaperedSegment(seamT1x, seamT1y, fx, fy, 1.6, 1.2, kit.primary, { flat: true });
+                        // ankle cuff
+                        const cx1 = kx + (fx - kx) * 0.86,
+                            cy1 = ky + (fy - ky) * 0.86;
+                        drawTaperedSegment(cx1, cy1, fx, fy, 7, 6.2, '#ffffff', { flat: true });
+                        const bootColor = isPlayerKeeper ? PLAYER_COLORS.boots : '#1a1a1a';
+                        drawDetailedBoot(fx, fy, 0.46, a1 + a2 + 0.1, !isLeft, bootColor, '#ffffff');
+                        ctx.restore();
+                    }
+                    const hipX = 0,
+                        hipY = -6;
+                    drawLeg(hipX - 6, hipY, 15, 15, lThigh, lKnee, true);
+                    drawLeg(hipX + 6, hipY, 15, 15, rThigh, rKnee, false);
+
+                    function drawArmSegment(sx, sy, ex, ey, color, w1, w2) {
+                        drawTaperedSegment(sx, sy, ex, ey, w1, w2, color);
+                    }
+                    const lElbowX = shoulderX - 10 + lArmX * 12;
+                    const lElbowY = shoulderY + lArmY * 12;
+                    const rElbowX = shoulderX + 10 + rArmX * 12;
+                    const rElbowY = shoulderY + rArmY * 12;
+                    // long sleeves (upper arm) in kit colors, bare forearm below the elbow
+                    drawArmSegment(shoulderX - 10, shoulderY, lElbowX, lElbowY, kit.primary, 8.2, 6.6);
+                    drawArmSegment(shoulderX + 10, shoulderY, rElbowX, rElbowY, kit.primary, 8.2, 6.6);
+                    drawArmSegment(lElbowX, lElbowY, lHandX, lHandY, skinColor, 6.2, 5.2);
+                    drawArmSegment(rElbowX, rElbowY, rHandX, rHandY, skinColor, 6.2, 5.2);
+
+                    const gloveColor = kit.gloves || kit.primary;
+                    drawRealisticKeeperGlove(lHandX, lHandY, 0.62, 0, false, lElbowX, lElbowY, gloveColor, isDiving);
+                    drawRealisticKeeperGlove(rHandX, rHandY, 0.62, 0, true, rElbowX, rElbowY, gloveColor, isDiving);
+
+                    ctx.save();
+                    const headX = 0,
+                        headY = -46;
+                    ctx.fillStyle = skinColor;
+                    ctx.fillRect(-4, -42, 8, 6);
+                    ctx.fillStyle = skinColor;
+                    ctx.beginPath();
+                    ctx.arc(headX, headY, 10, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#1a120e';
+                    ctx.beginPath();
+                    ctx.ellipse(headX, headY - 8, 10, 6, 0, Math.PI, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.ellipse(headX - 4, headY - 5, 4, 3, 0.3, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.ellipse(headX + 4, headY - 5, 4, 3, -0.3, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = kit.primary;
+                    ctx.beginPath();
+                    ctx.ellipse(headX, headY - 9, 10.5, 3.5, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = kit.secondary;
+                    ctx.fillRect(headX - 2, headY - 12, 4, 4);
+                    ctx.strokeStyle = '#5a3a2a';
+                    ctx.lineWidth = 1.2;
+                    ctx.beginPath();
+                    ctx.arc(headX, headY + 4, 4, 0.1, Math.PI - 0.1);
+                    ctx.stroke();
+                    ctx.restore();
+
+                    ctx.restore();
+                }
+
+                // ================= Shooter =================
+                function drawTaker() {
+                    const f = fieldRect();
+                    const startP = { x: W / 2 - 58, y: f.top + f.height * 0.89 };
+                    const kickP = { x: W / 2 - 17, y: f.top + f.height * 0.77 };
+                    const ctrlP = { x: W / 2 - 50, y: f.top + f.height * 0.83 };
+                    let px = startP.x,
+                        py = startP.y,
+                        runProgress = 0,
+                        kickPhase = 0;
+                    if (state === 'aim' || state === 'menu') { px = startP.x;
+                        py = startP.y; } else if (state === 'runup') {
+                        const p = Math.min(taker.runProgress, 1);
+                        const invP = 1 - p;
+                        px = invP * invP * startP.x + 2 * invP * p * ctrlP.x + p * p * kickP.x;
+                        py = invP * invP * startP.y + 2 * invP * p * ctrlP.y + p * p * kickP.y;
+                        runProgress = p;
+                    } else { px = kickP.x;
+                        py = kickP.y;
+                        kickPhase = taker.kickProgress; }
+                    ctx.save();
+                    const cycles = 4.2,
+                        cycle = runProgress * Math.PI * 2 * cycles;
+                    const bounce = (state === 'runup') ? -Math.abs(Math.sin(cycle)) * 6 : 0;
+                    ctx.translate(px, py + bounce);
+                    const scale = 1.55 + (py - (f.top + f.height * 0.77)) * 0.0022;
+                    ctx.scale(scale, scale);
+                    ctx.fillStyle = 'rgba(0,0,0,0.30)';
+                    ctx.beginPath();
+                    ctx.ellipse(2, 22, 18, 6, 0, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    let lThigh = -0.18,
+                        lKnee = 0.30,
+                        rThigh = 0.18,
+                        rKnee = -0.30;
+                    let lArm = -0.28,
+                        lElbow = -0.4,
+                        rArm = 0.28,
+                        rElbow = -0.4,
+                        bodyLean = 0.06;
+                    if (state === 'aim' || state === 'menu') { lThigh = -0.15;
+                        lKnee = 0.25;
+                        rThigh = 0.15;
+                        rKnee = -0.25;
+                        lArm = -0.20;
+                        lElbow = -0.35;
+                        rArm = 0.20;
+                        rElbow = -0.35;
+                        bodyLean = 0.04; } else if (state === 'runup') {
+                        const s = Math.sin(cycle);
+                        bodyLean = 0.18 + (1 - Math.cos(runProgress * Math.PI)) * 0.08;
+                        lThigh = -s * 0.65;
+                        rThigh = s * 0.65;
+                        lKnee = s < 0 ? (-s * 0.8) : 0.2;
+                        rKnee = s > 0 ? (-s * 0.8) : -0.2;
+                        lArm = s * 0.7;
+                        lElbow = -0.6 - Math.abs(s) * 0.3;
+                        rArm = -s * 0.7;
+                        rElbow = -0.6 - Math.abs(s) * 0.3;
+                    } else {
+                        if (kickPhase < 0.35) { const p = kickPhase / 0.35;
+                            lThigh = -0.10;
+                            lKnee = 0.2;
+                            rThigh = -0.85 - p * 0.35;
+                            rKnee = -0.5 - p * 0.6;
+                            bodyLean = 0.18 - p * 0.30;
+                            lArm = -0.7 * p;
+                            lElbow = -0.7;
+                            rArm = 0.7 * p;
+                            rElbow = -0.7; } else if (kickPhase < 0.50) { const p = (kickPhase - 0.35) / 0.15;
+                            lThigh = -0.10;
+                            lKnee = 0.2;
+                            rThigh = -1.2 + p * 1.9;
+                            rKnee = -1.1 + p * 0.9;
+                            bodyLean = -0.12 + p * 0.28;
+                            lArm = -0.7 + p * 0.5;
+                            lElbow = -0.5;
+                            rArm = 0.7 - p * 0.8;
+                            rElbow = -0.5; } else { const p = Math.min((kickPhase - 0.50) / 0.50, 1);
+                            const easeP = Math.sin(p * Math.PI / 2);
+                            lThigh = -0.08;
+                            lKnee = 0.15;
+                            rThigh = 0.7 + easeP * 0.35;
+                            rKnee = -0.15;
+                            bodyLean = 0.16 + easeP * 0.12;
+                            lArm = -0.2 - easeP * 0.3;
+                            lElbow = -0.3;
+                            rArm = -0.1 - easeP * 0.5;
+                            rElbow = -0.3; }
+                    }
+                    ctx.rotate(bodyLean);
+                    const hipX = 0,
+                        hipY = -6,
+                        shoulderX = 0,
+                        shoulderY = -32,
+                        thighLen = 15,
+                        shinLen = 15,
+                        upperArmLen = 11,
+                        lowerArmLen = 11;
+                    const isKeeper = isKeeperMode();
+                    const shooterPrimaryCol = isKeeper ? OPPONENT_COLORS.primary : PLAYER_COLORS.primary;
+                    const shooterDarkCol = isKeeper ? OPPONENT_COLORS.secondary : PLAYER_COLORS.secondary;
+                    const shortsCol = isKeeper ? OPPONENT_COLORS.shorts : PLAYER_COLORS.shorts;
+                    const bootUpper = isKeeper ? OPPONENT_COLORS.boots : PLAYER_COLORS.boots;
+
+                    function drawAnatomicalLimb(hx, hy, len1, len2, a1, a2, skinCol, isLeftLeg) {
+                        const kx = hx + Math.sin(a1) * len1,
+                            ky = hy + Math.cos(a1) * len1;
+                        const fx = kx + Math.sin(a1 + a2) * len2,
+                            fy = ky + Math.cos(a1 + a2) * len2;
+                        const pantsMain = shortsCol;
+                        const pantsShade = shadeColor(pantsMain, -14);
+                        ctx.save();
+                        // thigh (full-length tapered pant leg)
+                        drawTaperedSegment(hx, hy, kx, ky, 10.5, 8, pantsMain);
+                        // lower leg (pant continues all the way to the ankle)
+                        drawTaperedSegment(kx, ky, fx, fy, 8, 6.2, pantsShade);
+                        // outer seam piping in the kit's primary color
+                        const seamTx = hx + (kx - hx) * 0.15,
+                            seamTy = hy + (ky - hy) * 0.15;
+                        drawTaperedSegment(seamTx, seamTy, fx, fy, 1.5, 1.1, shooterPrimaryCol, { flat: true });
+                        // ankle cuff
+                        const cx1 = kx + (fx - kx) * 0.86,
+                            cy1 = ky + (fy - ky) * 0.86;
+                        drawTaperedSegment(cx1, cy1, fx, fy, 6.4, 5.7, '#ffffff', { flat: true });
+                        drawDetailedBoot(fx, fy, 0.46, a1 + a2 + 0.1, !isLeftLeg, bootUpper, '#ffffff');
+                        ctx.restore();
+                    }
+
+                    function drawAnatomicalArm(sx, sy, len1, len2, a1, a2, skinCol) {
+                        const ex = sx + Math.sin(a1) * len1,
+                            ey = sy + Math.cos(a1) * len1;
+                        const wx = ex + Math.sin(a1 + a2) * len2,
+                            wy = ey + Math.cos(a1 + a2) * len2;
+                        ctx.save();
+                        // short sleeve on the upper arm, bare forearm below the elbow
+                        drawTaperedSegment(sx, sy, ex, ey, 6.8, 5.6, shooterPrimaryCol);
+                        drawTaperedSegment(ex, ey, wx, wy, 5, 4.2, skinCol);
+                        ctx.fillStyle = '#ffffff';
+                        ctx.beginPath();
+                        ctx.arc(wx, wy, 3, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.restore();
+                    }
+                    drawAnatomicalLimb(hipX - 5, hipY, thighLen, shinLen, lThigh, lKnee, '#d9996b', true);
+                    ctx.fillStyle = shortsCol;
+                    ctx.beginPath();
+                    ctx.moveTo(-12 + 3, -14);
+                    ctx.arcTo(12, -14, 12, -14 + 13, 3);
+                    ctx.arcTo(12, -14 + 13, -12, -14 + 13, 3);
+                    ctx.arcTo(-12, -14 + 13, -12, -14, 3);
+                    ctx.arcTo(-12, -14, 12, -14, 3);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(-12, -14, 24, 2.5);
+                    ctx.fillRect(-12, -14, 3, 13);
+                    drawAnatomicalLimb(hipX + 5, hipY, thighLen, shinLen, rThigh, rKnee, '#e8b285', false);
+                    const jg = ctx.createLinearGradient(-13, -36, 13, 0);
+                    jg.addColorStop(0, shooterPrimaryCol);
+                    jg.addColorStop(1, shooterDarkCol);
+                    ctx.fillStyle = jg;
+                    ctx.beginPath();
+                    ctx.moveTo(-12 + 6, -36);
+                    ctx.arcTo(12, -36, 12, -36 + 24, 6);
+                    ctx.arcTo(12, -36 + 24, -12, -36 + 24, 6);
+                    ctx.arcTo(-12, -36 + 24, -12, -36, 6);
+                    ctx.arcTo(-12, -36, 12, -36, 6);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath();
+                    ctx.moveTo(-6, -36);
+                    ctx.lineTo(0, -30);
+                    ctx.lineTo(6, -36);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = 'bold 11px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(isKeeper ? '9' : '10', 0, -18);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(-12, -36, 24, 3);
+                    drawAnatomicalArm(shoulderX - 10, shoulderY, upperArmLen, lowerArmLen, lArm, lElbow, '#d9996b');
+                    drawAnatomicalArm(shoulderX + 10, shoulderY, upperArmLen, lowerArmLen, rArm, rElbow, '#e8b285');
+                    ctx.fillStyle = '#e8b285';
+                    ctx.beginPath();
+                    ctx.arc(0, -42, 9.5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#1c120c';
+                    ctx.beginPath();
+                    ctx.arc(0, -46, 9.5, Math.PI, 0);
+                    ctx.fill();
+                    ctx.fillRect(-9.5, -46, 19, 4);
+                    ctx.restore();
+                }
+
+                // ================= Ball =================
+                function drawBallShadowAndBall() {
+                    let pos, scale,
+                        ballRadius = 9;
+                    if (state === 'flight' && shot) {
+                        const p = Math.min(t / shot.duration, 1);
+                        pos = flightPos(p);
+                        scale = 1 - p * 0.48;
+                        ballRadius = 9 * scale;
+                        const shY = shot.startY + (shot.targetY - shot.startY) * p + 8;
+                        ctx.fillStyle = 'rgba(0,0,0,0.28)';
+                        ctx.beginPath();
+                        ctx.ellipse(pos.x, shY, 10 * scale, 4 * scale, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.save();
+                        ctx.globalAlpha = 0.22;
+                        for (let k = 1; k <= 3; k++) { const pp = Math.max(p - k * 0.04, 0);
+                            const tp = flightPos(pp);
+                            ctx.fillStyle = '#fff';
+                            ctx.beginPath();
+                            ctx.arc(tp.x, tp.y, ballRadius * (1 - k * 0.16), 0, Math.PI * 2);
+                            ctx.fill(); }
+                        ctx.restore();
+                    } else {
+                        pos = ballRestPos();
+                        scale = 1;
+                        ballRadius = 9;
+                        ctx.fillStyle = 'rgba(0,0,0,0.25)';
+                        ctx.beginPath();
+                        ctx.ellipse(pos.x, pos.y + 8, 10, 4, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    ctx.save();
+                    ctx.translate(pos.x, pos.y);
+                    ctx.fillStyle = '#f8fafd';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, ballRadius, 0, Math.PI * 2);
+                    ctx.fill();
+                    icoVertices.forEach(v => {
+                        const rx = ballMat[0][0] * v[0] + ballMat[0][1] * v[1] + ballMat[0][2] * v[2];
+                        const ry = ballMat[1][0] * v[0] + ballMat[1][1] * v[1] + ballMat[1][2] * v[2];
+                        const rz = ballMat[2][0] * v[0] + ballMat[2][1] * v[1] + ballMat[2][2] * v[2];
+                        if (rz > -0.15) {
+                            const px = rx * ballRadius,
+                                py = ry * ballRadius;
+                            const size = Math.max(0.4, (rz + 0.3) * (ballRadius * 0.28));
+                            ctx.fillStyle = '#111116';
+                            ctx.beginPath();
+                            for (let i = 0; i < 5; i++) { const ang = i * (Math.PI * 2 / 5) - Math.PI / 10;
+                                const vx = px + Math.cos(ang) * size;
+                                const vy = py + Math.sin(ang) * size;
+                                if (i === 0) ctx.moveTo(vx, vy);
+                                else ctx.lineTo(vx, vy); }
+                            ctx.closePath();
+                            ctx.fill();
+                        }
+                    });
+                    const sphereLight = ctx.createRadialGradient(-ballRadius * 0.35, -ballRadius * 0.35, ballRadius *
+                        0.08, 0, 0, ballRadius);
+                    sphereLight.addColorStop(0, 'rgba(255,255,255,0.65)');
+                    sphereLight.addColorStop(0.4, 'rgba(255,255,255,0.0)');
+                    sphereLight.addColorStop(0.8, 'rgba(0,0,0,0.18)');
+                    sphereLight.addColorStop(1, 'rgba(0,0,0,0.58)');
+                    ctx.fillStyle = sphereLight;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, ballRadius, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, ballRadius, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                // ================= Particles =================
+                function drawParticles() { particles.forEach(pt => { ctx.globalAlpha = Math.max(pt.life, 0);
+                        ctx.fillStyle = pt.color;
+                        ctx.beginPath();
+                        ctx.arc(pt.x, pt.y, pt.r, 0, Math.PI * 2);
+                        ctx.fill(); });
+                    ctx.globalAlpha = 1; }
+
+                function updateParticles(dt) { particles.forEach(pt => { pt.x += pt.vx * dt;
+                        pt.y += pt.vy * dt;
+                        pt.vy += 300 * dt;
+                        pt.life -= dt * 1.3; });
+                    particles = particles.filter(pt => pt.life > 0); }
+
+                function spawnDust(x, y) { for (let i = 0; i < 10; i++) { particles.push({ x, y, vx: (Math.random() -
+                                0.5) * 120, vy: -Math.random() * 90, r: 2 + Math.random() * 2.5, life: 1,
+                            color: 'rgba(220,210,180,0.8)' }); } }
+
+                function spawnGrassSpray(x, y, dir) { for (let i = 0; i < 8; i++) { particles.push({ x, y, vx: dir * (
+                                40 + Math.random() * 90), vy: -(60 + Math.random() * 80), r: 1.5 + Math.random() *
+                                2, life: 1, color: 'rgba(90,180,60,0.9)' }); } }
+
+                function spawnSaveSparkles(x, y) { for (let i = 0; i < 16; i++) { particles.push({ x, y, vx: (Math
+                            .random() - 0.5) * 260, vy: (Math.random() - 0.5) * 260, r: 2 + Math.random() * 3,
+                            life: 1, color: '#00e5ff' }); } }
+
+                // ================= Rain Weather =================
+                function initRainDrops() {
+                    if (!W || !H) return;
+                    rainDrops = [];
+                    const count = 130;
+                    for (let i = 0; i < count; i++) {
+                        rainDrops.push({
+                            x: Math.random() * W,
+                            y: Math.random() * H,
+                            len: 10 + Math.random() * 16,
+                            speed: 480 + Math.random() * 280,
+                            drift: 50 + Math.random() * 35,
+                            alpha: 0.2 + Math.random() * 0.35
+                        });
+                    }
+                }
+
+                function updateRain(dt) {
+                    rainDrops.forEach(d => {
+                        d.y += d.speed * dt;
+                        d.x += d.drift * dt;
+                        if (d.y > H) { d.y = -20; d.x = Math.random() * W; }
+                        if (d.x > W + 20) d.x -= (W + 40);
+                    });
+                    lightningTimer -= dt;
+                    if (lightningTimer <= 0) {
+                        lightningAlpha = 0.45 + Math.random() * 0.3;
+                        lightningTimer = 4.5 + Math.random() * 7;
+                    }
+                    if (lightningAlpha > 0) lightningAlpha = Math.max(0, lightningAlpha - dt * 1.7);
+                }
+
+                function drawRainMood() {
+                    ctx.fillStyle = 'rgba(8,14,24,0.16)';
+                    ctx.fillRect(0, 0, W, H);
+                    if (lightningAlpha > 0) {
+                        ctx.fillStyle = `rgba(220,232,255,${lightningAlpha * 0.5})`;
+                        ctx.fillRect(0, 0, W, H);
+                    }
+                }
+
+                function drawRainStreaks() {
+                    ctx.save();
+                    ctx.strokeStyle = 'rgba(205,222,255,0.55)';
+                    ctx.lineWidth = 1.2;
+                    ctx.lineCap = 'round';
+                    rainDrops.forEach(d => {
+                        ctx.globalAlpha = d.alpha;
+                        ctx.beginPath();
+                        ctx.moveTo(d.x, d.y);
+                        ctx.lineTo(d.x - d.drift * 0.035, d.y - d.len);
+                        ctx.stroke();
+                    });
+                    ctx.restore();
+                    ctx.globalAlpha = 1;
+                }
+
+                // ================= Physics =================
+                function bez(a, b, c, p) { return (1 - p) * (1 - p) * a + 2 * (1 - p) * p * b + p * p * c; }
+
+                function flightPos(p) {
+                    if (deflectionVec) { return { x: shot.targetX + deflectionVec.vx * p, y: shot.targetY +
+                                deflectionVec.vy * p }; }
+                    const dragP = 1 - Math.pow(1 - p, 1.25);
+                    const x = bez(shot.startX, shot.ctrlX, shot.targetX, dragP);
+                    const y = bez(shot.startY, shot.ctrlY, shot.targetY, dragP);
+                    const magnessCurve = Math.sin(Math.pow(p, 0.85) * Math.PI) * shot.curve;
+                    return { x: x + magnessCurve, y };
+                }
+
+                function computeTarget() {
+                    const g = goalGeom(),
+                        GH = g.goalBotY - g.goalTopY;
+                    const spreadX = g.topHalfW * 1.45;
+                    let targetX = g.cx + aim.x * spreadX;
+                    const vertPull = Math.max(-aim.y, 0);
+                    const heightNorm = Math.min(vertPull, 1);
+                    let targetY = (g.goalBotY - GH * 0.15) - heightNorm * (GH * 0.78);
+                    const halfAtTarget = g.topHalfW + (g.botHalfW - g.topHalfW) * ((targetY - g.goalTopY) / GH);
+                    const isMiss = (targetX < g.cx - halfAtTarget - 4) || (targetX > g.cx + halfAtTarget + 4) || (
+                        targetY < g.goalTopY - 4);
+                    const nearPost = !isMiss && (Math.abs(targetX - (g.cx - halfAtTarget)) < 18 || Math.abs(targetX - (
+                        g.cx + halfAtTarget)) < 18 || Math.abs(targetY - g.goalTopY) < 14);
+                    return { x: targetX, y: targetY, isMiss, nearPost };
+                }
+
+                // ================= AI Pattern Recognition =================
+                function analyzePlayerPatterns() {
+                    if (shotHistory.length === 0) return { zone: 0, heightNorm: 0.5, confidence: 0 };
+                    const zoneWeights = { '-1': 0, '0': 0, '1': 0 };
+                    const heightWeights = { low: 0, mid: 0, high: 0 };
+                    let totalWeight = 0;
+                    shotHistory.forEach((h, i) => {
+                        const recencyWeight = (i + 1) / shotHistory.length;
+                        const w = recencyWeight * recencyWeight;
+                        zoneWeights[String(h.zone)] += w;
+                        if (h.heightNorm < 0.35) heightWeights.low += w;
+                        else if (h.heightNorm > 0.65) heightWeights.high += w;
+                        else heightWeights.mid += w;
+                        totalWeight += w;
+                    });
+                    let bestZone = 0,
+                        maxZoneW = -1;
+                    [-1, 0, 1].forEach(z => { if (zoneWeights[String(z)] > maxZoneW) { maxZoneW = zoneWeights[String(
+                                z)];
+                            bestZone = z; } });
+                    let bestHeight = 0.5;
+                    if (heightWeights.high > heightWeights.low && heightWeights.high > heightWeights.mid) bestHeight =
+                        0.82;
+                    else if (heightWeights.low > heightWeights.high && heightWeights.low > heightWeights.mid)
+                        bestHeight = 0.18;
+                    if (shotHistory.length >= 2) {
+                        const last = shotHistory[shotHistory.length - 1];
+                        const secondLast = shotHistory[shotHistory.length - 2];
+                        if (last.zone === -secondLast.zone && last.zone !== 0) bestZone = -last.zone;
+                    }
+                    const confidence = totalWeight > 0 ? (maxZoneW / totalWeight) : 0;
+                    return { zone: bestZone, heightNorm: bestHeight, confidence };
+                }
+
+                // ================= Joystick =================
+                const joyBase = document.getElementById('joyBase');
+                const joyNub = document.getElementById('joyNub');
+                const maxR = 40;
+                let dragging = false;
+                const RING_LEN = 440;
+
+                function nubSet(dx, dy) { joyNub.style.left = (41 + dx) + 'px';
+                    joyNub.style.top = (41 + dy) + 'px'; }
+
+                function nubReset() { joyNub.style.left = '41px';
+                    joyNub.style.top = '41px'; }
+
+                function pointFromEvent(e) {
+                    const rect = joyBase.getBoundingClientRect();
+                    const cx = rect.left + rect.width / 2,
+                        cy = rect.top + rect.height / 2;
+                    const touch = e.touches ? e.touches[0] : e;
+                    return { x: touch.clientX - cx, y: touch.clientY - cy };
+                }
+
+                function startDrag(e) {
+                    if (paused || (state !== 'aim' && state !== 'runup')) return;
+                    e.preventDefault();
+                    dragging = true;
+                    hintEl.style.opacity = '0';
+                    handleMove(e);
+                }
+
+                function handleMove(e) {
+                    if (!dragging || paused) return;
+                    e.preventDefault();
+                    const p = pointFromEvent(e);
+                    let dx = p.x,
+                        dy = p.y;
+                    const dist = Math.hypot(dx, dy);
+                    if (dist > maxR) { dx = dx / dist * maxR;
+                        dy = dy / dist * maxR; }
+                    nubSet(dx, dy);
+                    aim.x = dx / maxR;
+                    aim.y = dy / maxR;
+                    power = Math.min(Math.hypot(aim.x, aim.y), 1);
+                    powerArc.setAttribute('stroke-dashoffset', RING_LEN - RING_LEN * power);
+                    if (isKeeperMode()) {
+                        keeper.diveDir = aim.x < -0.2 ? -1 : (aim.x > 0.2 ? 1 : 0);
+                        keeper.targetHeight = Math.min(Math.max(-aim.y, 0), 1);
+                    }
+                }
+
+                function endDrag(e) {
+                    if (!dragging || paused) return;
+                    dragging = false;
+                    const dist = Math.hypot(aim.x, aim.y);
+                    nubReset();
+                    powerArc.setAttribute('stroke-dashoffset', RING_LEN);
+                    if (!isKeeperMode()) {
+                        if (dist < 0.16) { aim.x = 0;
+                            aim.y = 0;
+                            power = 0; return; }
+                        prepareShot();
+                    }
+                }
+                joyBase.addEventListener('touchstart', startDrag, { passive: false });
+                joyBase.addEventListener('touchmove', handleMove, { passive: false });
+                joyBase.addEventListener('touchend', endDrag, { passive: false });
+                joyBase.addEventListener('mousedown', startDrag);
+                window.addEventListener('mousemove', handleMove);
+                window.addEventListener('mouseup', endDrag);
+
+                // ================= Shot Preparation =================
+                function prepareShot() {
+                    if (paused || (state !== 'aim' && state !== 'runup')) return;
+                    state = 'runup';
+                    taker.runProgress = 0;
+                    taker.kickProgress = 0;
+                    shotLaunched = false;
+                    deflectionVec = null;
+
+                    const g = goalGeom(),
+                        GH = g.goalBotY - g.goalTopY;
+                    const start = ballRestPos();
+                    let proj, diveDir, heightNorm, shotPower, aimX, aimY;
+
+                    if (!isKeeperMode()) {
+                        proj = computeTarget();
+                        proj.x += (Math.random() - 0.5) * 12;
+                        proj.y += (Math.random() - 0.5) * 6;
+                        shotPower = power;
+                        aimX = aim.x;
+                        aimY = aim.y;
+                        heightNorm = Math.min(Math.max(-aimY, 0), 1);
+                        const difficulty = Math.min(round, 4);
+                        const actualZone = proj.x < g.cx - g.topHalfW * 0.25 ? -1 : (proj.x > g.cx + g.topHalfW * 0.25 ?
+                            1 : 0);
+                        const curveVal = aimX * 52 * shotPower;
+                        const curveFactor = Math.min(difficulty * 0.22, 0.85);
+                        const effectiveTargetX = proj.x + curveVal * curveFactor * 0.45;
+                        const effectiveZone = effectiveTargetX < g.cx - g.topHalfW * 0.25 ? -1 : (effectiveTargetX > g
+                            .cx + g.topHalfW * 0.25 ? 1 : 0);
+                        const pattern = analyzePlayerPatterns();
+                        const reactionDelayBase = 0.12 + (1 - shotPower) * 0.20;
+                        const reactionDelay = reactionDelayBase + (Math.random() - 0.5) * 0.06;
+                        const diveSpeedBase = 0.8 + shotPower * 0.5;
+                        const diveSpeed = diveSpeedBase + (Math.random() - 0.5) * 0.3;
+                        const cornerPenalty = (Math.abs(proj.x - g.cx) / g.topHalfW) * 0.10;
+                        const powerPenalty = shotPower * 0.14;
+                        const heightPenalty = Math.abs(heightNorm - 0.5) * 0.08;
+                        let baseReactChance = 0.48 + difficulty * 0.10 - powerPenalty - cornerPenalty - heightPenalty;
+                        baseReactChance = Math.max(0.20, Math.min(0.85, baseReactChance));
+                        let patternBoost = 0;
+                        if (pattern.confidence > 0.45) patternBoost = pattern.confidence * 0.35;
+                        const roll = Math.random();
+                        let predictedHeight = 0.5;
+                        if (roll < baseReactChance + patternBoost * 0.6) {
+                            if (pattern.confidence > 0.5 && Math.random() < pattern.confidence) {
+                                diveDir = pattern.zone;
+                                predictedHeight = pattern.heightNorm + (Math.random() - 0.5) * 0.15;
+                            } else {
+                                diveDir = effectiveZone;
+                                const heightError = (1 - difficulty * 0.18) * (0.12 + shotPower * 0.16) * (Math
+                                .random() - 0.5);
+                                predictedHeight = Math.min(Math.max(heightNorm + heightError, 0), 1);
+                            }
+                        } else {
+                            const wrongOpts = [-1, 0, 1].filter(v => v !== effectiveZone);
+                            diveDir = wrongOpts[Math.floor(Math.random() * wrongOpts.length)];
+                            predictedHeight = Math.random();
+                        }
+                        shotHistory.push({ zone: actualZone, heightNorm });
+                        if (shotHistory.length > 10) shotHistory.shift();
+                        keeper.diveDir = diveDir;
+                        keeper.targetHeight = Math.min(Math.max(predictedHeight, 0), 1);
+                        keeper.reactionDelay = reactionDelay;
+                        keeper.diveSpeed = diveSpeed;
+                        keeper.hasReacted = false;
+                        keeper.reactionTimer = 0;
+                    } else {
+                        diveDir = keeper.diveDir;
+                        heightNorm = keeper.targetHeight || 0.5;
+                        const aiZones = [-1, 0, 1];
+                        let zoneWeights = [1, 1, 1];
+                        if (diveDir === -1) zoneWeights[0] = 0.3;
+                        else if (diveDir === 1) zoneWeights[2] = 0.3;
+                        else zoneWeights[1] = 0.3;
+                        let targetHeight = 0.5;
+                        if (heightNorm < 0.3) targetHeight = 0.7 + Math.random() * 0.25;
+                        else if (heightNorm > 0.7) targetHeight = 0.1 + Math.random() * 0.25;
+                        else targetHeight = 0.3 + Math.random() * 0.4;
+                        let totalW = zoneWeights.reduce((a, b) => a + b, 0);
+                        let r = Math.random() * totalW;
+                        let selectedZone = 0;
+                        for (let i = 0; i < 3; i++) { r -= zoneWeights[i]; if (r <= 0) { selectedZone = aiZones[i];
+                                break; } }
+                        const accuracy = 0.6 + Math.random() * 0.35;
+                        const zoneOffset = (selectedZone * 0.7 + (Math.random() - 0.5) * 0.4) * (1 + (1 - accuracy) *
+                            0.5);
+                        aimX = zoneOffset;
+                        aimY = -(targetHeight * 0.8 + 0.1 + (Math.random() - 0.5) * 0.15);
+                        shotPower = 0.6 + Math.random() * 0.35;
+                        const aiTargetX = g.cx + aimX * g.topHalfW * 1.1;
+                        const heightVal = Math.min(Math.max(-aimY, 0), 1);
+                        const aiTargetY = (g.goalBotY - GH * 0.15) - heightVal * (GH * 0.78);
+                        const halfAtTarget = g.topHalfW + (g.botHalfW - g.topHalfW) * ((aiTargetY - g.goalTopY) / GH);
+                        const isMiss = (aiTargetX < g.cx - halfAtTarget - 4) || (aiTargetX > g.cx + halfAtTarget + 4) ||
+                            (aiTargetY < g.goalTopY - 4);
+                        const nearPost = !isMiss && (Math.abs(aiTargetX - (g.cx - halfAtTarget)) < 16 || Math.abs(
+                            aiTargetX - (g.cx + halfAtTarget)) < 16 || Math.abs(aiTargetY - g.goalTopY) < 12);
+                        proj = { x: aiTargetX, y: aiTargetY, isMiss, nearPost };
+                        keeper.patternMemory.push({ zone: selectedZone, height: targetHeight });
+                        if (keeper.patternMemory.length > 8) keeper.patternMemory.shift();
+                        keeper.reactionDelay = 0.05 + Math.random() * 0.10;
+                        keeper.diveSpeed = 0.7 + Math.random() * 0.4;
+                        keeper.hasReacted = false;
+                        keeper.reactionTimer = 0;
+                    }
+
+                    const curve = aimX * 52 * shotPower;
+                    ballSpinVec = { wx: (-aimY - 0.2) * 16 * shotPower, wy: -aimX * 28 * shotPower, wz: aimX * 12 *
+                            shotPower };
+                    const ctrlX = (start.x + proj.x) / 2 + aimX * 26;
+                    const ctrlY = start.y - H * 0.22;
+                    shot = {
+                        startX: start.x,
+                        startY: start.y,
+                        ctrlX,
+                        ctrlY,
+                        targetX: proj.x,
+                        targetY: proj.y,
+                        curve,
+                        duration: 0.62 - shotPower * 0.16,
+                        shotPower: shotPower,
+                        proj: proj
+                    };
+                    keeper.tookOff = false;
+                    keeper.landed = false;
+                    keeper.animT = -1;
+                }
+
+                function launchShot() {
+                    shotLaunched = true;
+                    state = 'flight';
+                    t = 0;
+                    slowFactor = 1;
+                    sfxKick();
+                    const startP = ballRestPos();
+                    spawnDust(startP.x, startP.y + 6);
+                    spawnGrassSpray(startP.x - 6, startP.y + 4, -1);
+                    keeper.animT = 0;
+                    keeper.reactionTimer = 0;
+                    keeper.hasReacted = true;
+
+                    const hitPoints = keeperFullDivePoints(keeper.diveDir, keeper.targetHeight);
+                    let minDist = Infinity;
+                    hitPoints.forEach(pt => {
+                        const d = Math.hypot(pt.x - shot.proj.x, pt.y - shot.proj.y);
+                        if (d < minDist) minDist = d;
+                    });
+                    const reactionQuality = Math.max(0, 1 - (keeper.reactionDelay || 0.15) / 0.35);
+                    const catchRad = Math.max(28, 45 - (shot.shotPower || 0.8) * 8) * (0.7 + reactionQuality * 0.3);
+                    if (shot.proj.isMiss) {
+                        shot.outcome = 'miss';
+                    } else if (shot.proj.nearPost && Math.random() < 0.40) {
+                        shot.outcome = 'post';
+                    } else {
+                        shot.outcome = minDist < catchRad ? 'saved' : 'hit';
+                    }
+                    updateKeeperStatus();
+                }
+
+                function keeperFullDivePoints(diveDir, targetHeight) {
+                    const g = goalGeom(),
+                        GH = g.goalBotY - g.goalTopY;
+                    const baseX = g.cx,
+                        baseY = g.goalBotY - GH * 0.12;
+                    const hNorm = targetHeight !== undefined ? targetHeight : 0.5;
+                    const currentHalfW = g.topHalfW + (g.botHalfW - g.topHalfW) * (1 - hNorm);
+                    const offX = diveDir * currentHalfW * 0.95;
+                    const offY = diveDir !== 0 ? -hNorm * GH * 0.72 : -hNorm * GH * 0.48;
+                    const rot = diveDir * 0.52;
+                    const originX = baseX + offX,
+                        originY = baseY + offY;
+                    const cos = Math.cos(rot),
+                        sin = Math.sin(rot);
+
+                    function toWorld(lx, ly) { return { x: originX + lx * cos - ly * sin, y: originY + lx * sin + ly *
+                                cos }; }
+                    const armSpread = diveDir !== 0 ? 36 : 18;
+                    return [
+                        toWorld(-armSpread, -42),
+                        toWorld(armSpread, -42),
+                        toWorld(-armSpread - 20, -18),
+                        toWorld(armSpread + 20, -18),
+                        toWorld(-armSpread - 24, 12),
+                        toWorld(armSpread + 24, 12),
+                        toWorld(-14, -52),
+                        toWorld(14, -52),
+                        toWorld(0, -32),
+                        toWorld(0, 0)
+                    ];
+                }
+
+                function resolveShot(proj) {
+                    const isGoalScored = outcome === 'hit';
+                    if (!isKeeperMode()) {
+                        if (isGoalScored) playerGoals++;
+                        resultsPlayer.push(isGoalScored ? 'hit' : (outcome === 'post' ? 'post' : 'miss'));
+                    } else {
+                        if (isGoalScored) opponentGoals++;
+                        resultsOpponent.push(isGoalScored ? 'hit' : (outcome === 'post' ? 'post' : 'miss'));
+                    }
+                    round++;
+                    updateHud();
+                    shakeScreen(outcome === 'hit' ? 6 : (outcome === 'post' ? 9 : 3));
+
+                    if (!isKeeperMode()) {
+                        if (outcome === 'hit') { showMessage('GOAL!', 'goal');
+                            sfxCrowdGood();
+                            vibrate([30, 40, 60]); } else if (outcome === 'saved') { showMessage('SAVED!', 'bad');
+                            sfxCrowdBad();
+                            vibrate(50); } else if (outcome === 'post') { showMessage('OFF THE POST!', 'post');
+                            sfxPost();
+                            vibrate([20, 20, 20]); } else { showMessage('MISS!', 'bad');
+                            sfxWhistle();
+                            vibrate(50); }
+                    } else {
+                        if (outcome === 'hit') { showMessage('GOAL CONCEDED!', 'bad');
+                            sfxCrowdBad();
+                            vibrate(50); } else if (outcome === 'saved') { showMessage('GREAT SAVE!', 'goal');
+                            sfxCrowdGood();
+                            vibrate([30, 40, 60]); } else if (outcome === 'post') { showMessage('SAVED BY POST!',
+                                'post');
+                            sfxPost();
+                            vibrate([20, 20, 20]); } else { showMessage('OPPONENT MISSED!', 'goal');
+                            sfxWhistle();
+                            vibrate([20, 20]); }
+                    }
+                    state = 'result';
+                    updateKeeperStatus();
+
+                    if (round === TOTAL_ROUNDS && !jerseySwapped) {
+                        triggerJerseySwap();
+                        kitBadge.textContent = '⚽ KIT: AWAY (RED) · YOU ARE GK!';
+                        kitBadge.className = 'show';
+                    }
+
+                    if (round === TOTAL_ROUNDS) {
+                        setTimeout(() => {
+                            showOpponentRoundTransition(() => { nextRound(); });
+                        }, 900);
+                    } else if (round >= TOTAL_ROUNDS * 2) {
+                        setTimeout(endGame, 1250);
+                    } else {
+                        setTimeout(nextRound, 1250);
+                    }
+                }
+
+                function nextRound() {
+                    state = 'aim';
+                    aim = { x: 0, y: 0 };
+                    power = 0;
+                    shot = null;
+                    outcome = null;
+                    deflectionVec = null;
+                    keeper.animT = -1;
+                    keeper.diveDir = 0;
+                    keeper.targetHeight = 0;
+                    keeper.tookOff = false;
+                    keeper.landed = false;
+                    keeper.reactionDelay = 0;
+                    keeper.reactionTimer = 0;
+                    keeper.hasReacted = false;
+                    keeper.diveSpeed = 1.0;
+                    taker.runProgress = 0;
+                    taker.kickProgress = 0;
+                    shotLaunched = false;
+                    ballSpinVec = { wx: 0, wy: 0, wz: 0 };
+                    updateHud();
+                    updateKeeperStatus();
+                    updatePauseBtnVisibility();
+
+                    if (isKeeperMode()) {
+                        setTimeout(() => {
+                            if (state === 'aim' && !paused) prepareShot();
+                        }, 1100);
+                    }
+                }
+
+                function endGame() {
+                    state = 'over';
+                    pauseBtn.classList.add('hidden');
+                    if (playerGoals > opponentGoals) { overTitle.textContent = 'YOU WIN!';
+                        overTitle.style.color = '#3ddc61'; } else if (opponentGoals > playerGoals) { overTitle
+                            .textContent = 'OPPONENT WINS!';
+                        overTitle.style.color = '#e8524f'; } else { overTitle.textContent = "IT'S A TIE!";
+                        overTitle.style.color = '#e8c93f'; }
+                    overSub.textContent = `Final Score: YOU ${playerGoals} – ${opponentGoals} OPPONENT`;
+                    overlay.style.display = 'flex';
+                }
+
+                document.getElementById('restartBtn').addEventListener('click', () => {
+                    jerseySwapped = false;
+                    resetFullGame();
+                });
+
+                // ================= Main Loop =================
+                let lastTime = performance.now();
+
+                function loop(now) {
+                    let dt = (now - lastTime) / 1000;
+                    lastTime = now;
+                    dt = Math.min(dt, 0.05);
+
+                    // --- Update game state only if not paused ---
+                    if (!paused) {
+                        if (state === 'runup') {
+                            taker.runProgress += dt * (1.8 + taker.runProgress * 0.8);
+                            if (taker.runProgress >= 1) { taker.runProgress = 1;
+                                state = 'kick';
+                                taker.kickProgress = 0; }
+                        } else if (state === 'kick') {
+                            taker.kickProgress += dt * 5.0;
+                            if (taker.kickProgress >= 0.50 && !shotLaunched) { launchShot(); }
+                        } else if (state === 'flight') {
+                            taker.kickProgress += dt * 1.5;
+                            const p = Math.min(t / (shot ? shot.duration : 1), 1);
+                            slowFactor = p > 0.72 ? 0.4 : 1;
+                            t += dt * slowFactor;
+                            keeper.animT += dt * 1.8 * (keeper.diveSpeed || 1.0);
+                            updateBallRotation(dt * 2.2);
+                            const g = goalGeom();
+                            if (keeper.animT >= 0.12 && !keeper.tookOff) { keeper.tookOff = true;
+                                spawnGrassSpray(g.cx, g.goalBotY - 10, keeper.diveDir || 1); }
+                            if (keeper.animT >= 0.82 && !keeper.landed) { keeper.landed = true;
+                                const landX = g.cx + keeper.diveDir * g.topHalfW * 0.85;
+                                spawnDust(landX, g.goalBotY - 6); }
+                            if (shot && shot.outcome === 'saved' && p >= 0.82 && !deflectionVec) {
+                                deflectionVec = { vx: (keeper.diveDir || (Math.random() - 0.5)) * 140, vy: -120 - Math
+                                        .random() * 80 };
+                                sfxGloveSave();
+                                spawnSaveSparkles(shot.targetX, shot.targetY);
+                                shakeScreen(7);
+                            }
+                            if (p >= 1 && state === 'flight') { state = 'resolved';
+                                outcome = shot.outcome;
+                                setTimeout(() => resolveShot(shot.proj), 350); }
+                        }
+
+                        // Update particles only when not paused
+                        updateParticles(dt);
+                    }
+
+                    // --- Always draw, but dim if paused? ---
+                    draw(dt);
+
+                    // --- Shake effect (even when paused, shake persists) ---
+                    if (shakeState.mag > 0.05) {
+                        const mx = (Math.random() - 0.5) * shakeState.mag,
+                            my = (Math.random() - 0.5) * shakeState.mag;
+                        shakeEl.style.transform = `translate(${mx}px, ${my}px)`;
+                        shakeState.mag *= 0.90;
+                    } else { shakeEl.style.transform = 'translate(0,0)'; }
+
+                    requestAnimationFrame(loop);
+                }
+
+                requestAnimationFrame(loop);
+
+                console.log('Penalty Shootout initialized successfully.');
+            } catch (err) {
+                console.error('Fatal error in script:', err);
+            }
+        })();
+    </script>
+</body>
+</html>
