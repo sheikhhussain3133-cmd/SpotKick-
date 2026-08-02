@@ -32,6 +32,9 @@ jobs:
       - name: Add Android platform
         run: npx cap add android
 
+      - name: Decode icon from base64
+        run: base64 -d assets/icon-base64.txt > assets/icon.png
+
       - name: Generate app icons
         run: npx @capacitor/assets generate --android
 
