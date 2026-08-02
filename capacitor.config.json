@@ -1,0 +1,6 @@
+{
+  "appId": "com.spotkick.game",
+  "appName": "SpotKick",
+  "webDir": "www",
+  "bundledWebRuntime": false
+}
